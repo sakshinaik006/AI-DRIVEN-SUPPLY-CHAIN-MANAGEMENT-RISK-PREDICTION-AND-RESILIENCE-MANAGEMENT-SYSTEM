@@ -1,0 +1,11 @@
+entity_type,entity_id,route_type,origin_id,destination_id,origin_country,origin_city,destination_country,destination_city,shipping_mode,scheduled_days,distance_km,latitude,longitude
+route,RT001,inbound,SUP001,PLT004,Taiwan,Hsinchu,China,Shenzhen,air,3,747.0,23.6784,117.5127
+route,RT002,inbound,SUP002,PLT003,South Korea,Seoul,Vietnam,Bac Ninh,air,3,2712.0,29.3763,116.5272
+route,RT003,inbound,SUP003,PLT001,South Korea,Icheon,India,Chennai,air,5,5381.0,25.181,103.8566
+route,RT004,inbound,SUP004,PLT004,China,Dongguan,China,Shenzhen,road,2,62.0,22.7819,113.9049
+route,RT005,inbound,SUP008,PLT001,India,Pune,India,Chennai,road,3,914.0,15.8015,77.0637
+route,RT006,outbound,PLT001,WH001,India,Chennai,India,Mumbai,road,3,1033.0,16.0794,76.5742
+route,RT007,outbound,PLT002,WH005,India,Noida,United Arab Emirates,Dubai,sea,9,2222.0,26.8701,66.3309
+route,RT008,outbound,PLT003,WH004,Vietnam,Bac Ninh,Singapore,Singapore,sea,6,2219.0,11.2691,104.948
+route,RT009,outbound,PLT004,WH003,China,Shenzhen,United States,Los Angeles,sea,21,11639.0,28.2976,-2.0929
+route,RT010,outbound,PLT004,WH002,China,Shenzhen,Netherlands,Rotterdam,sea,28,9299.0,37.2338,59.2678

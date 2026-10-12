@@ -1,0 +1,5 @@
+entity_type,entity_id,name,country,city,latitude,longitude,capacity_units_per_day
+plant,PLT001,Chennai Phone Plant,India,Chennai,13.0827,80.2707,12000
+plant,PLT002,Noida Phone Plant,India,Noida,28.5355,77.391,10000
+plant,PLT003,Bac Ninh Phone Plant,Vietnam,Bac Ninh,21.1861,106.0763,15000
+plant,PLT004,Shenzhen Phone Plant,China,Shenzhen,22.5431,114.0579,20000

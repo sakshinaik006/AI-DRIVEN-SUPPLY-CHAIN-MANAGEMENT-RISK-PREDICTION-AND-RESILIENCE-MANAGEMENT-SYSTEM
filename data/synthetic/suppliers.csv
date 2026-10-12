@@ -1,0 +1,9 @@
+entity_type,entity_id,name,country,city,latitude,longitude,tier,base_lead_time_days,component_ids,single_source_flag
+supplier,SUP001,Hsinchu Silicon Works,Taiwan,Hsinchu,24.8138,120.9675,1,21,C001,1
+supplier,SUP002,Seoul Display Systems,South Korea,Seoul,37.5665,126.978,1,18,C002,0
+supplier,SUP003,Icheon Memory Corp,South Korea,Icheon,37.2792,127.4425,1,16,C003,1
+supplier,SUP004,Dongguan Power Cells,China,Dongguan,23.0207,113.7518,1,10,C004,0
+supplier,SUP005,Ningbo Battery Group,China,Ningbo,29.8683,121.544,1,12,C004;C006,0
+supplier,SUP006,Suzhou Optics,China,Suzhou,31.2989,120.5853,1,14,C005,0
+supplier,SUP007,Shenzhen Display Tech,China,Shenzhen,22.5431,114.0579,1,12,C002;C005,0
+supplier,SUP008,Pune Assembly Parts,India,Pune,18.5204,73.8567,1,7,C006,0

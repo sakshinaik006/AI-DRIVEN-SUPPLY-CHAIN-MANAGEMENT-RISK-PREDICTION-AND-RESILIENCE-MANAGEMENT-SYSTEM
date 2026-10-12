@@ -1,0 +1,10 @@
+# Shared, pinned loosely. Everyone appends their own packages via a small PR.
+# Member 1 (data, graph, decision)
+pandas>=2.0
+numpy>=1.24
+pyarrow>=14.0
+requests>=2.31
+networkx>=3.1
+python-dotenv>=1.0
+faker>=24.0
+# Member 2 / Member 3 append below

@@ -1,0 +1,6 @@
+entity_type,entity_id,name,country,city,latitude,longitude,safety_stock_units
+warehouse,WH001,Mumbai Distribution Centre,India,Mumbai,19.076,72.8777,6000
+warehouse,WH002,Rotterdam Distribution Centre,Netherlands,Rotterdam,51.9244,4.4777,5000
+warehouse,WH003,Los Angeles Distribution Centre,United States,Los Angeles,34.0522,-118.2437,7000
+warehouse,WH004,Singapore Distribution Centre,Singapore,Singapore,1.3521,103.8198,4000
+warehouse,WH005,Dubai Distribution Centre,United Arab Emirates,Dubai,25.2048,55.2708,4500

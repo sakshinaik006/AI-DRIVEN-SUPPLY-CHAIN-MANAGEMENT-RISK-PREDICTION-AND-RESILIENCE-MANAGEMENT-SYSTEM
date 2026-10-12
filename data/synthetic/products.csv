@@ -1,0 +1,6 @@
+product_id,product_name,tier,unit_price_usd
+P001,Phone Lite,budget,180
+P002,Phone Core,mid,320
+P003,Phone Core Plus,mid,410
+P004,Phone Pro,premium,720
+P005,Phone Max,premium,950

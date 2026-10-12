@@ -1,0 +1,12 @@
+.env
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+frontend/dist/
+# large data: keep generating scripts, not big files
+data/raw/dataco/*.csv
+*.zip
