@@ -10,3 +10,5 @@ frontend/dist/
 # large data: keep generating scripts, not big files
 data/raw/dataco/*.csv
 *.zip
+data/raw/
+data/processed/
