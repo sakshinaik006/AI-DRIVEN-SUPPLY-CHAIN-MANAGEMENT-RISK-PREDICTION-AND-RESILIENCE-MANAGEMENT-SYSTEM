@@ -1,26 +1,94 @@
-# Labels (v1)
+# Seven-Day-Ahead Risk Labels
 
-All labels are `label_7d`: a 0/1 value that looks at the next 7 days after `date`
-(days t+1 to t+7). The label for day t may use future data; features may not.
+## Purpose
 
-| Risk | entity_type | label_7d = 1 if, in t+1..t+7 |
-|---|---|---|
-| supplier_failure | supplier | a delivery arrives more than **X = 3 days** late, or a disruption event hits the supplier |
-| manufacturing_delay | plant | actual production < **85%** of plan on any day, or the plant reports a delay |
-| warehouse_stockout | warehouse | stock is below safety stock (or zero) on any day |
-| transport_disruption | route | a shipment arrives after its scheduled date |
+These labels mark whether a supply-chain risk event occurs during the seven
+calendar days after a prediction date.
 
-X = 3 days is the starting value. Adjust the threshold or the generator if the
-positive rate falls outside the target.
+For a feature row dated `t`, predict events during `(t, t + 7 days]`.
+Use only information available on or before `t` to construct features.
 
-## Target positive rate
+Labels are binary:
 
-Each label needs **3-5% positives or more** (overall and in train). The positives report is
-written to `outputs/label_positives_report.csv` with the data v1 handover. If a label misses the
-target, Member 1 adjusts thresholds or the generator and tells Member 3 at once.
+- `1` = the event occurs in the prediction window.
+- `0` = the event does not occur in the prediction window.
+- `null` = the outcome cannot be determined from available data.
 
-## Rules
+The four label columns are `supplier_failure_7d`, `manufacturing_delay_7d`,
+`stockout_7d`, and `transport_delay_7d`.
 
-- Labels are created BEFORE the time split, then split by date.
-- Rows in the last 7 days of the window (25-31 Oct) have no full look-ahead and are dropped from labelled tables.
-- Leakage columns (`Late_delivery_risk`, delivery status, actual shipping days) never appear in features.
+## Label definitions
+
+### Supplier failure
+
+Set `supplier_failure_7d = 1` if the supplier has a documented failure event
+in the seven-day prediction window. A failure event may include a confirmed
+supplier shutdown, cancellation, or inability to deliver the required
+component.
+
+Set it to `0` if supplier outcome data is available for the full window and
+no qualifying event occurred. Use `null` if the supplier has no reliable
+outcome record for that window.
+
+Do not treat an ordinary late delivery as supplier failure unless the project
+data explicitly records it as a failure event.
+
+### Manufacturing delay
+
+Set `manufacturing_delay_7d = 1` if, within the prediction window, actual
+production is less than 85% of planned production:
+
+`actual_production / planned_production < 0.85`
+
+Set it to `0` if production and plan data are available for the full window
+and the threshold is not crossed. Use `null` if either value is missing or
+planned production is zero.
+
+### Warehouse stockout
+
+Set `stockout_7d = 1` if warehouse inventory falls below its defined
+safety-stock level at any point in the prediction window:
+
+`inventory < safety_stock`
+
+Set it to `0` if inventory and safety-stock data cover the full window and
+inventory never falls below the threshold. Use `null` if either series or the
+safety-stock value is unavailable.
+
+### Transport delay
+
+Set `transport_delay_7d = 1` if a shipment scheduled to arrive in the
+prediction window arrives after its scheduled arrival date:
+
+`actual_arrival_date > scheduled_arrival_date`
+
+Set it to `0` if shipment outcome data is available for the full window and
+no qualifying late arrival occurred. Use `null` if the shipment has not
+resolved or either date is unavailable.
+
+## Implementation and leakage rules
+
+- Generate labels from future outcome records, not from feature values.
+- Keep the prediction date and outcome window explicit in the processed data.
+- Do not use `Late_delivery_risk`, delivery status, actual shipping days,
+  actual arrival dates, or other post-outcome fields as model features.
+- A missing outcome is not automatically a negative label; represent it as
+  `null` and exclude it from supervised training and evaluation.
+- Apply the agreed date split using the prediction date: train April–August
+  2025, validation September 2025, and test October 2025.
+- For rows whose full seven-day outcome window is not observable, set the
+  label to `null` rather than assuming no event occurred.
+- Record any synthetic-label generation rules and threshold changes in
+  `docs/assumptions.md`.
+
+## Label validation
+
+Before model training, report for each risk:
+
+- Number of positive, negative, and null labels.
+- Positive-label rate among non-null labels.
+- Date range covered by valid labels.
+
+Check that the positive rate is sufficient for evaluation. If a threshold or
+synthetic event rate must be adjusted, document the change and regenerate
+labels consistently across all splits.
