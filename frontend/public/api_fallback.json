@@ -1,0 +1,95 @@
+{
+  "network_score": 0.46,
+  "network_level": "Medium",
+  "weights_assumption": {
+    "supplier": 0.25,
+    "manufacturing": 0.25,
+    "stockout": 0.2,
+    "transport": 0.2,
+    "external": 0.1
+  },
+  "risks": [
+    {
+      "entity_id": "SUP001",
+      "entity_type": "supplier",
+      "date": "2025-10-10",
+      "risk_type": "supplier_failure",
+      "probability": 0.78,
+      "level": "High"
+    },
+    {
+      "entity_id": "WH001",
+      "entity_type": "warehouse",
+      "date": "2025-10-12",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.64,
+      "level": "High"
+    },
+    {
+      "entity_id": "RT004",
+      "entity_type": "route",
+      "date": "2025-10-08",
+      "risk_type": "transport_disruption",
+      "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "PLT003",
+      "entity_type": "plant",
+      "date": "2025-10-14",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.18,
+      "level": "Low"
+    }
+  ],
+  "shap_features": [
+    {
+      "feature": "supplier_delay_7d_avg",
+      "shap_value": 1.45
+    },
+    {
+      "feature": "rain_7d_sum",
+      "shap_value": 0.82
+    },
+    {
+      "feature": "single_source_flag",
+      "shap_value": 0.53
+    },
+    {
+      "feature": "news_tone_14d_trend",
+      "shap_value": -0.21
+    }
+  ],
+  "levels": {
+    "low_max": 0.3,
+    "high_min": 0.6
+  },
+  "reasons": [
+    "Supplier risk is HIGH mainly due to high recent delays (supplier_delay_7d_avg) and extreme rain.",
+    "Warehouse risk is HIGH due to rapid stock depletion below safety threshold.",
+    "Transport risk is MEDIUM due to moderate port delays.",
+    "Manufacturing risk is LOW with stable daily throughput."
+  ],
+  "actions": [
+    {
+      "risk_type": "supplier_failure",
+      "level": "High",
+      "action": "Switch supplier: activate secondary certified supplier and allocate emergency quota."
+    },
+    {
+      "risk_type": "warehouse_stockout",
+      "level": "High",
+      "action": "Raise safety stock coverage and expedite inter-warehouse inventory rebalancing."
+    },
+    {
+      "risk_type": "transport_disruption",
+      "level": "Medium",
+      "action": "Reroute active container transit via secondary corridor."
+    },
+    {
+      "risk_type": "manufacturing_delay",
+      "level": "Low",
+      "action": "Maintain standard production schedule; prioritize high-value customer orders."
+    }
+  ]
+}
