@@ -52,31 +52,32 @@
 
 Command:
 ```bash
-python -m pytest -v
+python -m pytest tests/ src/api/test_api.py -v
 ```
 
 Output:
 ```
 tests/test_day1.py::test_master_tables_handover2_compliance PASSED       [  7%]
-tests/test_day1.py::test_routes_table_integrity PASSED                   [ 15%]
-tests/test_day1.py::test_weather_coverage_handover3 PASSED               [ 23%]
-tests/test_day1.py::test_dataco_electronics_dates_and_filter PASSED      [ 30%]
-tests/test_day1.py::test_calibrated_positive_label_rates PASSED          [ 38%]
-tests/test_day2.py::test_features_v1_and_v2_exist_and_match PASSED       [ 46%]
-tests/test_day2.py::test_features_leakage_and_splits PASSED              [ 53%]
-tests/test_day2.py::test_graph_scores_handover12 PASSED                  [ 61%]
-tests/test_day2.py::test_data_dictionary_and_frontend_build PASSED       [ 69%]
-tests/test_day3.py::test_network_score_computation_and_assumptions PASSED [ 76%]
-tests/test_day3.py::test_network_score_high_threshold PASSED             [ 84%]
-tests/test_day3.py::test_recommendations_rules PASSED                    [ 92%]
-tests/test_day3.py::test_disclosure_file_contents PASSED                 [100%]
-============================= 13 passed in 0.89s ==============================
+tests/test_day1.py::test_routes_table_integrity PASSED                   [ 14%]
+tests/test_day1.py::test_weather_coverage_handover3 PASSED               [ 21%]
+tests/test_day1.py::test_dataco_electronics_dates_and_filter PASSED      [ 28%]
+tests/test_day1.py::test_calibrated_positive_label_rates PASSED          [ 35%]
+tests/test_day2.py::test_features_v1_and_v2_exist_and_match PASSED       [ 42%]
+tests/test_day2.py::test_features_leakage_and_splits PASSED              [ 50%]
+tests/test_day2.py::test_graph_scores_handover12 PASSED                  [ 57%]
+tests/test_day2.py::test_data_dictionary_and_frontend_build PASSED       [ 64%]
+tests/test_day3.py::test_network_score_computation_and_assumptions PASSED [ 71%]
+tests/test_day3.py::test_network_score_high_threshold PASSED             [ 78%]
+tests/test_day3.py::test_recommendations_rules PASSED                    [ 85%]
+tests/test_day3.py::test_disclosure_file_contents PASSED                 [ 92%]
+src/api/test_api.py::test_api_endpoints PASSED                           [100%]
+======================== 14 passed in 2.45s ========================
 ```
 
 Frontend production build check:
 ```bash
-cmd.exe /c "npm run build"
-# Result: vite v8.3.4 building client environment for production... ✓ built in 7.00s (dist/ generated)
+cmd.exe /c "cd frontend && npm run build"
+# Result: vite v8.3.4 building client environment for production... ✓ built in 8.75s (dist/ generated)
 ```
 
 ---
@@ -84,13 +85,18 @@ cmd.exe /c "npm run build"
 ## 5. Modified & Created Files
 
 - `src/data/generate_events.py` (calibrated causal events and added route dispatches)
-- `src/data/build_features.py` (pipeline for features_v1 and features_v2)
+- `src/data/build_features.py` (leak-free pipeline for features_v1 and features_v2; ingested Member 2 news_scores)
 - `src/graph/build_graph.py` (NetworkX graph modeling, dependency count, HGT structural score, route importance)
 - `src/decision/network_score.py` (composite network risk index and assumption weighting)
 - `src/decision/recommendations.py` (prescriptive resilience mitigation rules)
+- `src/api/main.py` (FastAPI backend server implementing all 5 endpoints with CORS)
+- `src/api/test_api.py` (FastAPI contract verification tests)
 - `docs/data_dictionary.md` (complete schema and leakage rule documentation)
 - `docs/disclosure.md` (real vs synthetic data and prototype disclosure)
 - `data/synthetic/transport_shipments.parquet` & `.csv` (synthetic route shipments)
+- `data/processed/news_scores.parquet` (Member 2 handover received: 5,778 rows)
+- `data/processed/anomaly_scores.parquet` (Member 2 handover received: 5,708 rows)
+- `outputs/metrics.csv` (Member 2 handover received: 22 comparison rows)
 - `data/processed/features_supplier_v1.parquet` & `_v2.parquet`
 - `data/processed/features_manufacturing_v1.parquet` & `_v2.parquet`
 - `data/processed/features_warehouse_v1.parquet` & `_v2.parquet`
@@ -108,9 +114,15 @@ cmd.exe /c "npm run build"
 
 ---
 
-## 6. What to Do Once Member 2 Sends Handovers
+## 6. Member 2 Integration Status & Next Steps
 
-1. **Pull changes:** `git pull origin main` (or teammate's branch).
-2. **Review `news_scores.parquet`:** Run 30-minute validation check on columns (`entity_id`, `date`, `text_risk`, `text_risk_7d`, `disruption_type`, `tone`) and verify train rows are out-of-fold.
-3. **Regenerate features:** Execute `python -m src.data.build_features` to ingest Member 2 news signals.
-4. **Connect React to FastAPI:** Start Member 2's backend `uvicorn src.api.main:app --reload --port 8000` and confirm the React dashboard connects live without CORS errors.
+1. **Member 2 Handovers Received & Integrated:**
+   - **Handover 8 (`news_scores.parquet`):** Validated schema (`entity_id`, `date`, `text_risk`, `text_risk_7d`, `disruption_type`, `tone`, 5,778 rows). Ingested into feature pipeline via `python -m src.data.build_features`.
+   - **Handover 14 (`src/api/main.py`):** Verified all 5 contract endpoints (`/api/risks`, `/api/reasons`, `/api/network-score`, `/api/alerts`, `/api/metrics`) and CORS header `Access-Control-Allow-Origin: *` / `http://localhost:5173`. Passes `src/api/test_api.py`.
+   - **Extended Isolation Forest & Metrics:** Received `data/processed/anomaly_scores.parquet` and `outputs/metrics.csv`.
+2. **Current Test Status:** 14/14 tests passing (`pytest tests/ src/api/test_api.py`).
+3. **Pending Member 3 Handovers:**
+   - Handover 11 (`forecast_scores.parquet`) from Member 3.
+   - Handover 13 (`predictions.csv`, `shap_values.parquet`) from Member 3.
+   - Currently, the API cleanly falls back to interface contract files (`predictions_v0_dummy.csv`, `reasons_v0_dummy.csv`, `shap_values_v0_dummy.parquet`).
+4. **Next Step:** Stage and commit the integrated files and push to remote `member1/dataco-prep` with user approval.

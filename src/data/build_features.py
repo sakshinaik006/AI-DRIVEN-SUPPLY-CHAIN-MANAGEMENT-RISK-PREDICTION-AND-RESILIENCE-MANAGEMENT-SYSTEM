@@ -72,8 +72,10 @@ def build_supplier_features() -> pd.DataFrame:
     weather["date"] = pd.to_datetime(weather["date"]).dt.strftime("%Y-%m-%d")
     weather_map = weather[weather["entity_type"] == "supplier"].set_index(["entity_id", "date"])["precipitation_mm"].to_dict()
 
-    # News (read dummy/real news table if present for tones)
-    news_path = PROC / "news_scores_v0_dummy.parquet"
+    # News (read real Member 2 news_scores or fallback to dummy news)
+    news_path = PROC / "news_scores.parquet"
+    if not news_path.exists():
+        news_path = PROC / "news_scores_v0_dummy.parquet"
     news_df = pd.read_parquet(news_path) if news_path.exists() else None
     if news_df is not None:
         news_df["date"] = pd.to_datetime(news_df["date"]).dt.strftime("%Y-%m-%d")
