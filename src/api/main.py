@@ -1,4 +1,4 @@
-﻿"""FastAPI Backend Server for Supply Chain Risk Prediction & Resilience Platform.
+"""FastAPI Backend Server for Supply Chain Risk Prediction & Resilience Platform.
 
 Implements all endpoints defined in docs/api_contract.md:
   - GET /api/risks
@@ -117,6 +117,28 @@ def load_predictions_df() -> pd.DataFrame:
     if not pred_path.exists():
         raise HTTPException(status_code=500, detail="Predictions dataset not found.")
     df = pd.read_csv(pred_path)
+    
+    # If predictions are in wide multi-target format from CatBoost (Member 3)
+    prob_cols = [c for c in df.columns if c.startswith("risk_") and c.endswith("_prob")]
+    if prob_cols and "risk_type" not in df.columns:
+        melted = []
+        for _, r in df.iterrows():
+            eid = r["entity_id"]
+            d = r["date"]
+            for col in prob_cols:
+                # e.g. risk_supplier_failure_prob -> supplier_failure
+                rt = col.replace("risk_", "").replace("_prob", "")
+                prob = float(r[col])
+                level = "HIGH" if prob >= 0.60 else ("MEDIUM" if prob >= 0.30 else "LOW")
+                melted.append({
+                    "entity_id": eid,
+                    "date": d,
+                    "risk_type": rt,
+                    "probability": prob,
+                    "level": level,
+                })
+        df = pd.DataFrame(melted)
+
     if "entity_type" not in df.columns:
         # Infer entity_type from entity_id prefix
         def infer_etype(eid):
@@ -233,18 +255,31 @@ def get_reasons(
     # Extract SHAP breakdown
     shap_breakdown = []
     if not df_shap.empty:
-        match_s = df_shap[
-            (df_shap["entity_id"] == entity_id) &
-            (df_shap["risk_type"].str.lower().str.contains(rt_norm))
-        ]
-        if not match_s.empty:
-            # Take latest date records
-            latest_d = match_s["date"].max()
-            match_s_latest = match_s[match_s["date"] == latest_d]
-            for _, r in match_s_latest.iterrows():
+        if "entity_id" in df_shap.columns and "risk_type" in df_shap.columns:
+            match_s = df_shap[
+                (df_shap["entity_id"] == entity_id) &
+                (df_shap["risk_type"].str.lower().str.contains(rt_norm))
+            ]
+            if not match_s.empty:
+                latest_d = match_s["date"].max() if "date" in match_s.columns else None
+                match_s_latest = match_s[match_s["date"] == latest_d] if latest_d else match_s
+                for _, r in match_s_latest.iterrows():
+                    feat_col = "feature" if "feature" in r else "feature_name"
+                    val_col = "shap_value" if "shap_value" in r else "mean_shap_importance"
+                    shap_breakdown.append(ShapFeature(
+                        feature=str(r[feat_col]),
+                        shap_value=round(float(r[val_col]), 3),
+                    ))
+        elif "target_risk" in df_shap.columns and "feature_name" in df_shap.columns:
+            # Member 3 model-level SHAP summary
+            match_s = df_shap[df_shap["target_risk"].str.lower().str.contains(rt_norm)]
+            if match_s.empty:
+                match_s = df_shap
+            val_col = "mean_shap_importance" if "mean_shap_importance" in match_s.columns else "shap_value"
+            for _, r in match_s.head(5).iterrows():
                 shap_breakdown.append(ShapFeature(
-                    feature=str(r["feature"]),
-                    shap_value=round(float(r["shap_value"]), 3),
+                    feature=str(r["feature_name"]),
+                    shap_value=round(float(r[val_col]), 3),
                 ))
 
     # Fallback explanation if records are sparse

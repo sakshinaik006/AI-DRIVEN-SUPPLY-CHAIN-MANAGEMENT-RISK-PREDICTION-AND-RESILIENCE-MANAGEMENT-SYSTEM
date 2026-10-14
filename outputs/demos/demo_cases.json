@@ -1,0 +1,20 @@
+{
+    "case_1_high_supplier_risk": {
+        "entity_id": "WH003",
+        "date": "2025-10-02",
+        "risk_level": "High",
+        "probability": 0.542
+    },
+    "case_2_stockout": {
+        "entity_id": "WH002",
+        "date": "2025-09-01",
+        "risk_level": "High",
+        "probability": 0.564
+    },
+    "case_3_low_risk": {
+        "entity_id": "WH001",
+        "date": "2025-06-05",
+        "risk_level": "Low",
+        "probability": 1.899
+    }
+}

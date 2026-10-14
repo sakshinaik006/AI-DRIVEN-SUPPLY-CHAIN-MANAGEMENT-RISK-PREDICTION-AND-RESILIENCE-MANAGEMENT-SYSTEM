@@ -97,6 +97,12 @@ cmd.exe /c "cd frontend && npm run build"
 - `data/processed/news_scores.parquet` (Member 2 handover received: 5,778 rows)
 - `data/processed/anomaly_scores.parquet` (Member 2 handover received: 5,708 rows)
 - `outputs/metrics.csv` (Member 2 handover received: 22 comparison rows)
+- `outputs/predictions.csv` (Member 3 handover received: 1,035 multi-target prediction rows)
+- `outputs/shap_values.parquet` & `outputs/shap_summary.csv` (Member 3 TreeExplainer attribution scores)
+- `outputs/forecast_scores.parquet` (Member 3 Chronos & PatchTST demand forecasts)
+- `outputs/demos/` (Member 3 demo cases and SHAP visualizations)
+- `MEMBER3_REPORT.md` (Member 3 documentation & modeling metrics)
+- `src/forecast/` & `src/stacking/` (Member 3 forecasting & CatBoost model modules)
 - `data/processed/features_supplier_v1.parquet` & `_v2.parquet`
 - `data/processed/features_manufacturing_v1.parquet` & `_v2.parquet`
 - `data/processed/features_warehouse_v1.parquet` & `_v2.parquet`
@@ -114,15 +120,18 @@ cmd.exe /c "cd frontend && npm run build"
 
 ---
 
-## 6. Member 2 Integration Status & Next Steps
+## 6. Team Handovers Integration Status & Verification
 
 1. **Member 2 Handovers Received & Integrated:**
-   - **Handover 8 (`news_scores.parquet`):** Validated schema (`entity_id`, `date`, `text_risk`, `text_risk_7d`, `disruption_type`, `tone`, 5,778 rows). Ingested into feature pipeline via `python -m src.data.build_features`.
-   - **Handover 14 (`src/api/main.py`):** Verified all 5 contract endpoints (`/api/risks`, `/api/reasons`, `/api/network-score`, `/api/alerts`, `/api/metrics`) and CORS header `Access-Control-Allow-Origin: *` / `http://localhost:5173`. Passes `src/api/test_api.py`.
-   - **Extended Isolation Forest & Metrics:** Received `data/processed/anomaly_scores.parquet` and `outputs/metrics.csv`.
-2. **Current Test Status:** 14/14 tests passing (`pytest tests/ src/api/test_api.py`).
-3. **Pending Member 3 Handovers:**
-   - Handover 11 (`forecast_scores.parquet`) from Member 3.
-   - Handover 13 (`predictions.csv`, `shap_values.parquet`) from Member 3.
-   - Currently, the API cleanly falls back to interface contract files (`predictions_v0_dummy.csv`, `reasons_v0_dummy.csv`, `shap_values_v0_dummy.parquet`).
-4. **Next Step:** Stage and commit the integrated files and push to remote `member1/dataco-prep` with user approval.
+   - **Handover 8 (`news_scores.parquet`):** Ingested into feature pipelines.
+   - **Handover 14 (`src/api/main.py`):** Verified all 5 contract endpoints and CORS header `Access-Control-Allow-Origin: *` / `http://localhost:5173`.
+   - **Anomaly Scores & Metrics:** Verified `data/processed/anomaly_scores.parquet` and `outputs/metrics.csv`.
+2. **Member 3 Handovers Received & Integrated:**
+   - **Handover 11 (`forecast_scores.parquet`):** Received 5-warehouse demand and transit delay forecasts.
+   - **Handover 13 & 15 (`predictions.csv`, CatBoost Stacking):** Multi-target model predictions ingested via dynamic adapter in `src/api/main.py`.
+   - **Handover 17 & 18 (Explainability & Demos):** Integrated `shap_values.parquet`, `shap_summary.csv`, and `outputs/demos/demo_cases.json`.
+   - **Handover 22 (`MEMBER3_REPORT.md`):** Frozen metrics documented (PR-AUC: 0.85, Recall: 0.78, F1: 0.81).
+3. **Current System Verification:**
+   - **Backend API & Data Tests:** 14/14 tests passing (`pytest tests/ src/api/test_api.py -v`).
+   - **Frontend UI Production Build:** `npm run build` compiled clean into `frontend/dist/` in 7.02s.
+4. **All 3 Days Team Work Complete:** All planned data, NLP, graph, forecasting, stacking, explainability, API, decision logic, and React dashboard components are integrated and operational.
