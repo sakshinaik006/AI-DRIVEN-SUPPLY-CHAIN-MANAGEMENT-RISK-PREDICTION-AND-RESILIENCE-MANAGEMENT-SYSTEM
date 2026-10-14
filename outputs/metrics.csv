@@ -1,0 +1,23 @@
+model,risk_type,pr_auc,recall,f1,is_baseline
+TF-IDF + Logistic Regression,all_news,1.0,1.0,1.0,True
+DeBERTa-v3 + NER,all_news,1.0,1.0,1.0,False
+Extended Isolation Forest,supplier_failure,1.0,1.0,0.127,False
+Plain Isolation Forest Baseline,supplier_failure,1.0,1.0,0.077,True
+Extended Isolation Forest,manufacturing_delay,1.0,1.0,0.193,False
+Plain Isolation Forest Baseline,manufacturing_delay,1.0,1.0,0.143,True
+Extended Isolation Forest,warehouse_stockout,0.986,0.173,0.294,False
+Plain Isolation Forest Baseline,warehouse_stockout,0.926,0.115,0.206,True
+Extended Isolation Forest,transport_disruption,1.0,0.79,0.858,False
+Plain Isolation Forest Baseline,transport_disruption,0.907,0.75,0.808,True
+catboost_multitarget,supplier_failure,0.753,0.428,0.464,False
+catboost_multitarget,manufacturing_delay,0.5,0.371,0.349,False
+catboost_multitarget,warehouse_stockout,0.42,0.303,0.589,False
+catboost_multitarget,transport_disruption,0.367,0.347,0.582,False
+catboost_plain,supplier_failure,0.596,0.63,0.552,True
+catboost_plain,manufacturing_delay,0.742,0.362,0.693,True
+catboost_plain,warehouse_stockout,0.506,0.752,0.417,True
+catboost_plain,transport_disruption,0.774,0.734,0.387,True
+xgboost,supplier_failure,0.517,0.422,0.371,True
+xgboost,manufacturing_delay,0.494,0.568,0.501,True
+xgboost,warehouse_stockout,0.466,0.464,0.381,True
+xgboost,transport_disruption,0.411,0.565,0.38,True
