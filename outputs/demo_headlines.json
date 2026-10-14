@@ -1,0 +1,86 @@
+[
+  {
+    "scenario": "Supplier Disruption (Semiconductor Wafer Shortage)",
+    "headline": "Critical wafer and component shortage disrupts technology supply chain near Hsinchu",
+    "linked_node": "SUP001",
+    "entity_name": "Hsinchu Silicon Works (Tier 1 Semiconductor Fab)",
+    "disruption_type": "shortage",
+    "risk_score": 0.798,
+    "risk_level": "HIGH",
+    "tone": -6.42,
+    "all_linked_nodes": [
+      "SUP001",
+      "RT001"
+    ],
+    "demo_significance": "Demonstrates DeBERTa-v3 identifying critical upstream raw material deficits and spaCy NER binding regional news to tier-1 single-source silicon provider."
+  },
+  {
+    "scenario": "Manufacturing Risk (Grid Blackout & Plant Stoppage)",
+    "headline": "Transformer failure causes extended power cut at major production cluster in Shenzhen",
+    "linked_node": "PLT004",
+    "entity_name": "Shenzhen Phone Plant (Capacity: 20k units/day)",
+    "disruption_type": "power_cut",
+    "risk_score": 0.783,
+    "risk_level": "HIGH",
+    "tone": -5.88,
+    "all_linked_nodes": [
+      "SUP004",
+      "SUP005",
+      "SUP006",
+      "SUP007",
+      "PLT004"
+    ],
+    "demo_significance": "Captures direct plant-level operational failure flags without waiting for monthly output reports, triggering proactive line rebalancing."
+  },
+  {
+    "scenario": "Warehouse Stockout Risk (Regional Inbound Deficit)",
+    "headline": "Component shortages force assembly delays at high-volume plants in Chennai",
+    "linked_node": "WH001",
+    "entity_name": "Mumbai Distribution Centre (Regional Hub)",
+    "disruption_type": "shortage",
+    "risk_score": 0.767,
+    "risk_level": "HIGH",
+    "tone": -4.95,
+    "all_linked_nodes": [
+      "SUP008",
+      "PLT001",
+      "PLT002",
+      "WH001",
+      "RT003"
+    ],
+    "demo_significance": "Links downstream warehouse replenishment risks to regional component shortages, providing early stockout warning before safety stock breach."
+  },
+  {
+    "scenario": "Transport Disruption (Deepwater Port Congestion)",
+    "headline": "Massive container vessel backlog causes acute port congestion near Ningbo",
+    "linked_node": "RT001",
+    "entity_name": "RT001 / RT010 Inbound/Outbound Maritime Freight Lane",
+    "disruption_type": "port_congestion",
+    "risk_score": 0.754,
+    "risk_level": "HIGH",
+    "tone": -7.15,
+    "all_linked_nodes": [
+      "SUP004",
+      "SUP005",
+      "SUP006",
+      "SUP007",
+      "PLT004"
+    ],
+    "demo_significance": "Flags multi-day berthing bottlenecks and customs backlogs, allowing logistics managers to initiate freight rerouting via air transit."
+  },
+  {
+    "scenario": "Low Risk / Stable Operations (Baseline)",
+    "headline": "Logistics operators in Rotterdam report steady cargo volumes and stable schedules",
+    "linked_node": "WH002",
+    "entity_name": "Rotterdam Distribution Centre (European Gateway)",
+    "disruption_type": "port_congestion",
+    "risk_score": 0.122,
+    "risk_level": "LOW",
+    "tone": 2.15,
+    "all_linked_nodes": [
+      "WH002",
+      "RT010"
+    ],
+    "demo_significance": "Demonstrates low risk calibration (text_risk < 0.15) for smooth logistical throughput, preventing false-positive operational alerts."
+  }
+]

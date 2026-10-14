@@ -39,6 +39,10 @@ OUT_DIR = ROOT / "outputs"
 PROC_DIR = ROOT / "data" / "processed"
 SYN_DIR = ROOT / "data" / "synthetic"
 
+from src.decision.network_score import compute_network_risk, DEFAULT_WEIGHTS
+from src.decision.recommendations import generate_recommendations
+from src.api.alerts_llm import format_alert_summary_llm
+
 app = FastAPI(
     title="AI-Driven Supply Chain Risk Prediction API",
     description="7-day ahead risk prediction, TreeSHAP explanations, network risk score, and mitigation alerts",
@@ -294,36 +298,29 @@ def get_network_score():
         if not latest_news.empty:
             ext_score = float(latest_news["text_risk_7d"].mean())
 
-    # Holistic Network Risk Score Formula from docs/assumptions.md
-    net_score = (
-        WEIGHTS_ASSUMPTION["supplier"] * avg_probs.get("supplier", 0.35) +
-        WEIGHTS_ASSUMPTION["manufacturing"] * avg_probs.get("manufacturing", 0.35) +
-        WEIGHTS_ASSUMPTION["stockout"] * avg_probs.get("warehouse", 0.35) +
-        WEIGHTS_ASSUMPTION["transport"] * avg_probs.get("transport", 0.35) +
-        WEIGHTS_ASSUMPTION["external"] * ext_score
+    # Call Member 1's decision logic module
+    res = compute_network_risk(
+        supplier_prob=avg_probs.get("supplier", 0.35),
+        manufacturing_prob=avg_probs.get("manufacturing", 0.35),
+        stockout_prob=avg_probs.get("warehouse", 0.35),
+        transport_prob=avg_probs.get("transport", 0.35),
+        external_score=ext_score,
+        weights=DEFAULT_WEIGHTS,
     )
-    net_score = round(float(net_score), 3)
-
-    # Classify overall network level
-    if net_score >= 0.60:
-        level = "HIGH"
-    elif net_score >= 0.30:
-        level = "MEDIUM"
-    else:
-        level = "LOW"
 
     return NetworkScoreResponse(
         date=latest_date,
-        network_risk_score=net_score,
-        level=level,
-        weights_assumption=WEIGHTS_ASSUMPTION,
+        network_risk_score=res["network_risk"],
+        level=res["level"].upper(),
+        weights_assumption=res["weights"],
     )
 
 
 @app.get("/api/alerts", response_model=AlertResponse)
 def get_alerts(entity_id: str = Query(..., description="Unique entity ID (e.g. SUP001, WH001)")):
     df_pred = load_predictions_df()
-    match = df_pred[df_pred["entity_id"] == entity_id]
+    norm_id = entity_id.replace("_", "").upper()
+    match = df_pred[df_pred["entity_id"].astype(str).str.replace("_", "").str.upper() == norm_id]
 
     if not match.empty:
         latest_row = match.sort_values("date").iloc[-1]
@@ -335,70 +332,49 @@ def get_alerts(entity_id: str = Query(..., description="Unique entity ID (e.g. S
         prob = 0.45
         risk_type = "supplier_failure"
 
-    # Mitigation decision logic per docs/assumptions.md
-    recommended_actions = []
+    # Map to standardized risk_type for recommendations module
     if "supplier" in risk_type:
-        if risk_level == "HIGH":
-            recommended_actions = [
-                "Trigger immediate volume reallocation to backup supplier SUP004",
-                "Expedite incoming component shipments via priority air freight",
-                "Prioritize high-value customer order fulfillments",
-            ]
-        elif risk_level == "MEDIUM":
-            recommended_actions = [
-                "Monitor supplier delivery buffer and increase daily check-in cadence",
-                "Review alternative tier-1 qualified supplier capacity",
-            ]
-        else:
-            recommended_actions = ["Maintain standard replenishment and procurement schedule"]
+        rt_key = "supplier_failure"
     elif "mfg" in risk_type or "manufacturing" in risk_type or "plant" in risk_type:
-        if risk_level == "HIGH":
-            recommended_actions = [
-                "De-prioritize low-margin product lines and concentrate assembly on flagship units",
-                "Rebalance production schedules to secondary facility PLT004",
-                "Schedule emergency preventive equipment maintenance",
-            ]
-        elif risk_level == "MEDIUM":
-            recommended_actions = [
-                "Adjust shift scheduling to buffer potential output shortfall",
-                "Inspect critical plant subsystem components",
-            ]
-        else:
-            recommended_actions = ["Maintain planned manufacturing throughput"]
+        rt_key = "manufacturing_delay"
     elif "warehouse" in risk_type or "stockout" in risk_type:
-        if risk_level == "HIGH":
-            recommended_actions = [
-                "Increase safety stock buffer allocations by 25%",
-                "Initiate urgent cross-dock transfer from adjacent regional distribution center",
-                "Cap order fulfillment volumes for non-contractual demand",
-            ]
-        elif risk_level == "MEDIUM":
-            recommended_actions = [
-                "Trigger inventory replenishment threshold early",
-                "Verify warehouse inbound receiving schedule",
-            ]
-        else:
-            recommended_actions = ["Inventory cover is within safe operational limits"]
-    else:  # Transport route
-        if risk_level == "HIGH":
-            recommended_actions = [
-                "Reroute shipments away from congested hub to alternative multimodal lane",
-                "Switch scheduled ocean container cargo to expedited air freight",
-                "Notify downstream assembly plants of potential transit variance",
-            ]
-        elif risk_level == "MEDIUM":
-            recommended_actions = [
-                "Track container milestones with carriers and monitor weather advisories",
-                "Stage buffer transit stock at forward staging hubs",
-            ]
-        else:
-            recommended_actions = ["Transit lanes operating within normal delivery windows"]
+        rt_key = "warehouse_stockout"
+    else:
+        rt_key = "transport_disruption"
 
-    # Template fallback alert summary (no LLM required on Day 2)
-    alert_summary = (
-        f"{entity_id} exhibits {prob:.1%} predicted risk ({risk_level}) over the next 7 days. "
-        f"Primary drivers include compounding operational delay trends and localized external factors. "
-        f"Recommended intervention: {recommended_actions[0]}."
+    # Load diagnostic reasons for entity
+    df_reasons = load_reasons_df()
+    top_reasons = []
+    if not df_reasons.empty:
+        match_r = df_reasons[df_reasons["entity_id"].astype(str).str.replace("_", "").str.upper() == norm_id]
+        if not match_r.empty:
+            raw = match_r.iloc[-1].get("top3_reasons", "")
+            if isinstance(raw, str):
+                top_reasons = [r.strip() for r in raw.split(";") if r.strip()]
+
+    if not top_reasons:
+        top_reasons = [
+            f"Elevated historical delivery delays detected for {entity_id}",
+            "Adverse localized news sentiment and disruption flags in vicinity",
+        ]
+
+    # Generate prescriptive recommendations using Member 1's decision module
+    rec_items = generate_recommendations(
+        risk_type=rt_key,
+        level=risk_level,
+        entity_id=entity_id,
+        probability=prob,
+        top_reasons=top_reasons,
+    )
+    recommended_actions = [item["action"] for item in rec_items]
+
+    # Formulate alert summary via LLM or robust template fallback
+    alert_summary = format_alert_summary_llm(
+        entity_id=entity_id,
+        risk_level=risk_level,
+        probability=prob,
+        top_reasons=top_reasons,
+        recommended_actions=recommended_actions,
     )
 
     return AlertResponse(
@@ -423,6 +399,38 @@ def get_metrics():
             is_baseline=bool(r["is_baseline"]),
         ))
     return results
+
+
+@app.get("/api/news")
+def get_news(limit: int = Query(10, description="Max news items to return")):
+    demo_file = OUT_DIR / "demo_headlines.json"
+    if demo_file.exists():
+        import json
+        with open(demo_file, "r", encoding="utf-8") as f:
+            demo_items = json.load(f)
+            return demo_items[:limit]
+
+    # Fallback default items
+    return [
+        {
+            "headline": "Critical wafer and component shortage disrupts technology supply chain near Hsinchu",
+            "linked_node": "SUP001",
+            "entity_name": "Hsinchu Silicon Works (Taiwan)",
+            "disruption_type": "shortage",
+            "risk_score": 0.798,
+            "risk_level": "HIGH",
+            "tone": -6.42,
+        },
+        {
+            "headline": "Transformer failure causes extended power cut at major production cluster in Shenzhen",
+            "linked_node": "PLT004",
+            "entity_name": "Shenzhen Phone Plant (China)",
+            "disruption_type": "power_cut",
+            "risk_score": 0.783,
+            "risk_level": "HIGH",
+            "tone": -5.88,
+        },
+    ]
 
 
 if __name__ == "__main__":

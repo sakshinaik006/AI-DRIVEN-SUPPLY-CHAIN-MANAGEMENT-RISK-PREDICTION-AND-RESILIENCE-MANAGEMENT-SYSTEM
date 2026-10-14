@@ -77,6 +77,15 @@ def test_api_endpoints():
             assert k in m, f"Missing key {k} in metric item"
     print(f"    PASS: /api/metrics returned {len(metric_data)} comparison rows.")
 
+    print("--> Testing GET /api/news ...")
+    r = client.get("/api/news")
+    assert r.status_code == 200, f"Expected 200, got {r.status_code}"
+    news_data = r.json()
+    assert isinstance(news_data, list), "Expected list of news"
+    assert len(news_data) > 0, "Empty news response"
+    assert "headline" in news_data[0], "Missing headline key"
+    print(f"    PASS: /api/news returned {len(news_data)} news items. Sample: {news_data[0]['headline'][:50]}...")
+
     print("--> Testing CORS Headers for http://localhost:5173 ...")
     cors_resp = client.options(
         "/api/risks",
