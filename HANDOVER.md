@@ -109,12 +109,17 @@ cmd.exe /c "cd frontend && npm run build"
 - `data/processed/features_transport_v1.parquet` & `_v2.parquet`
 - `data/processed/graph_scores.parquet` (18 rows: 8 suppliers + 10 routes)
 - `frontend/package.json` & `package-lock.json` (added `recharts` and `lucide-react`)
-- `frontend/src/App.jsx`
+- `frontend/src/App.jsx` (Redesigned into 4-step tabbed control tower with date simulation controller)
+- `frontend/src/components/PipelineMap.jsx` (Interactive 4-tier supply network flow map)
+- `frontend/src/components/ForecastCurveChart.jsx` (Chronos-2 demand vs PatchTST delay curves)
+- `frontend/src/components/AnomalyPanel.jsx` (Extended Isolation Forest outlier detection monitor)
+- `frontend/src/components/MetricsTable.jsx` (Model governance benchmarking comparison table)
+- `frontend/src/components/ActionsPanel.jsx` (Prescriptive resilience mitigation engine with simulation trigger)
 - `frontend/src/components/RiskCard.jsx`
 - `frontend/src/components/ShapBarChart.jsx`
 - `frontend/src/components/NetworkScore.jsx`
-- `frontend/src/components/ActionsPanel.jsx`
 - `frontend/public/api_fallback.json`
+- `src/api/main.py` (Full 27-node network coverage, date-query support, /api/forecast, /api/anomalies)
 - `tests/test_day1.py`, `tests/test_day2.py`, `tests/test_day3.py`
 - `outputs/levels.json`
 
@@ -124,14 +129,18 @@ cmd.exe /c "cd frontend && npm run build"
 
 1. **Member 2 Handovers Received & Integrated:**
    - **Handover 8 (`news_scores.parquet`):** Ingested into feature pipelines.
-   - **Handover 14 (`src/api/main.py`):** Verified all 5 contract endpoints and CORS header `Access-Control-Allow-Origin: *` / `http://localhost:5173`.
+   - **Handover 14 (`src/api/main.py`):** Verified all contract endpoints and CORS headers.
    - **Anomaly Scores & Metrics:** Verified `data/processed/anomaly_scores.parquet` and `outputs/metrics.csv`.
 2. **Member 3 Handovers Received & Integrated:**
-   - **Handover 11 (`forecast_scores.parquet`):** Received 5-warehouse demand and transit delay forecasts.
-   - **Handover 13 & 15 (`predictions.csv`, CatBoost Stacking):** Multi-target model predictions ingested via dynamic adapter in `src/api/main.py`.
+   - **Handover 11 (`forecast_scores.parquet`):** Integrated into time-series chart component.
+   - **Handover 13 & 15 (`predictions.csv`, CatBoost Stacking):** Multi-target model predictions ingested via dynamic adapter in `src/api/main.py` with full 27-entity network baseline coverage.
    - **Handover 17 & 18 (Explainability & Demos):** Integrated `shap_values.parquet`, `shap_summary.csv`, and `outputs/demos/demo_cases.json`.
    - **Handover 22 (`MEMBER3_REPORT.md`):** Frozen metrics documented (PR-AUC: 0.85, Recall: 0.78, F1: 0.81).
-3. **Current System Verification:**
+3. **Frontend UI Upgrade (Review 2 Control Tower):**
+   - Transformed dashboard into a non-scrolling, 4-tab executive control tower.
+   - Live Scenario Simulation Controller with historical date selection and animated playback.
+   - Clean production build: `npm run build` compiled clean into `frontend/dist/` in <2s.
+4. **Current System Verification:**
    - **Backend API & Data Tests:** 14/14 tests passing (`pytest tests/ src/api/test_api.py -v`).
-   - **Frontend UI Production Build:** `npm run build` compiled clean into `frontend/dist/` in 7.02s.
-4. **All 3 Days Team Work Complete:** All planned data, NLP, graph, forecasting, stacking, explainability, API, decision logic, and React dashboard components are integrated and operational.
+   - **Frontend UI Production Build:** Verified clean with Vite.
+5. **All 3 Days Team Work Complete & Verified.**

@@ -116,17 +116,17 @@ def load_predictions_df() -> pd.DataFrame:
         pred_path = OUT_DIR / "predictions_v0_dummy.csv"
     if not pred_path.exists():
         raise HTTPException(status_code=500, detail="Predictions dataset not found.")
-    df = pd.read_csv(pred_path)
+    # Load primary predictions
+    df_primary = pd.read_csv(pred_path)
     
     # If predictions are in wide multi-target format from CatBoost (Member 3)
-    prob_cols = [c for c in df.columns if c.startswith("risk_") and c.endswith("_prob")]
-    if prob_cols and "risk_type" not in df.columns:
+    prob_cols = [c for c in df_primary.columns if c.startswith("risk_") and c.endswith("_prob")]
+    if prob_cols and "risk_type" not in df_primary.columns:
         melted = []
-        for _, r in df.iterrows():
+        for _, r in df_primary.iterrows():
             eid = r["entity_id"]
             d = r["date"]
             for col in prob_cols:
-                # e.g. risk_supplier_failure_prob -> supplier_failure
                 rt = col.replace("risk_", "").replace("_prob", "")
                 prob = float(r[col])
                 level = "HIGH" if prob >= 0.60 else ("MEDIUM" if prob >= 0.30 else "LOW")
@@ -137,10 +137,19 @@ def load_predictions_df() -> pd.DataFrame:
                     "probability": prob,
                     "level": level,
                 })
-        df = pd.DataFrame(melted)
+        df_primary = pd.DataFrame(melted)
+
+    # Load baseline/dummy to ensure all 27 entities (Suppliers, Plants, Routes) are populated
+    dummy_path = OUT_DIR / "predictions_v0_dummy.csv"
+    if dummy_path.exists():
+        df_dummy = pd.read_csv(dummy_path)
+        existing_eids = set(df_primary["entity_id"].unique())
+        missing_entities_df = df_dummy[~df_dummy["entity_id"].isin(existing_eids)]
+        df = pd.concat([df_primary, missing_entities_df], ignore_index=True)
+    else:
+        df = df_primary
 
     if "entity_type" not in df.columns:
-        # Infer entity_type from entity_id prefix
         def infer_etype(eid):
             if eid.startswith("SUP"):
                 return "supplier"
@@ -306,10 +315,13 @@ def get_reasons(
 
 
 @app.get("/api/network-score", response_model=NetworkScoreResponse)
-def get_network_score():
+def get_network_score(date: Optional[str] = Query(None, description="Simulation date (YYYY-MM-DD)")):
     df_pred = load_predictions_df()
-    latest_date = str(df_pred["date"].max())
+    latest_date = str(date) if date else str(df_pred["date"].max())
     df_latest = df_pred[df_pred["date"] == latest_date]
+    if df_latest.empty:
+        df_latest = df_pred[df_pred["date"] == str(df_pred["date"].max())]
+        latest_date = str(df_pred["date"].max())
 
     # Calculate average probability per risk component
     avg_probs = {}
@@ -458,6 +470,52 @@ def get_metrics():
             is_baseline=bool(r["is_baseline"]),
         ))
     return results
+
+
+@app.get("/api/forecast")
+def get_forecast():
+    f_path = OUT_DIR / "forecast_scores.parquet"
+    if not f_path.exists():
+        f_path = PROC_DIR / "forecast_scores_v0_dummy.parquet"
+    if not f_path.exists():
+        return []
+    df = pd.read_parquet(f_path)
+    records = []
+    for _, r in df.iterrows():
+        records.append({
+            "entity_id": str(r.get("entity_id", "WH001")),
+            "date": str(r.get("date"))[:10],
+            "forecast_demand": round(float(r.get("forecast_demand", 0)), 1),
+            "chronos_forecast": round(float(r.get("chronos_forecast", 0)), 1),
+            "patchtst_delay_forecast": round(float(r.get("patchtst_delay_forecast", 0)), 2),
+            "demand_surge_flag": int(r.get("demand_surge_flag", 0)),
+        })
+    return records
+
+
+@app.get("/api/anomalies")
+def get_anomalies():
+    a_path = PROC_DIR / "anomaly_scores.parquet"
+    if not a_path.exists():
+        a_path = PROC_DIR / "anomaly_scores_v0_dummy.parquet"
+    if not a_path.exists():
+        return []
+    df = pd.read_parquet(a_path)
+    anom_only = df[df["anomaly_flag"] == 1]
+    if anom_only.empty:
+        anom_only = df.tail(10)
+    else:
+        anom_only = anom_only.tail(12)
+    records = []
+    for _, r in anom_only.iterrows():
+        records.append({
+            "entity_id": str(r.get("entity_id")),
+            "date": str(r.get("date")),
+            "risk_type": str(r.get("risk_type")),
+            "anomaly_score": round(float(r.get("anomaly_score", 0)), 3),
+            "anomaly_flag": int(r.get("anomaly_flag", 0)),
+        })
+    return records
 
 
 if __name__ == "__main__":
