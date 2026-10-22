@@ -12,34 +12,650 @@
     {
       "entity_id": "SUP001",
       "entity_type": "supplier",
-      "date": "2025-10-10",
+      "date": "2025-04-15",
       "risk_type": "supplier_failure",
-      "probability": 0.78,
-      "level": "High"
+      "probability": 0.22,
+      "level": "Low"
     },
     {
-      "entity_id": "WH001",
-      "entity_type": "warehouse",
-      "date": "2025-10-12",
-      "risk_type": "warehouse_stockout",
-      "probability": 0.64,
-      "level": "High"
-    },
-    {
-      "entity_id": "RT004",
-      "entity_type": "route",
-      "date": "2025-10-08",
-      "risk_type": "transport_disruption",
+      "entity_id": "SUP002",
+      "entity_type": "supplier",
+      "date": "2025-04-15",
+      "risk_type": "supplier_failure",
       "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "SUP003",
+      "entity_type": "supplier",
+      "date": "2025-04-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.22,
+      "level": "Low"
+    },
+    {
+      "entity_id": "SUP004",
+      "entity_type": "supplier",
+      "date": "2025-04-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "SUP005",
+      "entity_type": "supplier",
+      "date": "2025-04-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.22,
+      "level": "Low"
+    },
+    {
+      "entity_id": "SUP006",
+      "entity_type": "supplier",
+      "date": "2025-04-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "SUP007",
+      "entity_type": "supplier",
+      "date": "2025-04-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.22,
+      "level": "Low"
+    },
+    {
+      "entity_id": "SUP008",
+      "entity_type": "supplier",
+      "date": "2025-04-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "PLT001",
+      "entity_type": "plant",
+      "date": "2025-04-15",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.18,
+      "level": "Low"
+    },
+    {
+      "entity_id": "PLT002",
+      "entity_type": "plant",
+      "date": "2025-04-15",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.35,
       "level": "Medium"
     },
     {
       "entity_id": "PLT003",
       "entity_type": "plant",
-      "date": "2025-10-14",
+      "date": "2025-04-15",
       "risk_type": "manufacturing_delay",
       "probability": 0.18,
       "level": "Low"
+    },
+    {
+      "entity_id": "PLT004",
+      "entity_type": "plant",
+      "date": "2025-04-15",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.18,
+      "level": "Low"
+    },
+    {
+      "entity_id": "WH001",
+      "entity_type": "warehouse",
+      "date": "2025-04-15",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.25,
+      "level": "Low"
+    },
+    {
+      "entity_id": "WH002",
+      "entity_type": "warehouse",
+      "date": "2025-04-15",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.48,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "WH003",
+      "entity_type": "warehouse",
+      "date": "2025-04-15",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.25,
+      "level": "Low"
+    },
+    {
+      "entity_id": "WH004",
+      "entity_type": "warehouse",
+      "date": "2025-04-15",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.25,
+      "level": "Low"
+    },
+    {
+      "entity_id": "WH005",
+      "entity_type": "warehouse",
+      "date": "2025-04-15",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.25,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT001",
+      "entity_type": "route",
+      "date": "2025-04-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT002",
+      "entity_type": "route",
+      "date": "2025-04-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "RT003",
+      "entity_type": "route",
+      "date": "2025-04-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT004",
+      "entity_type": "route",
+      "date": "2025-04-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "RT005",
+      "entity_type": "route",
+      "date": "2025-04-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT006",
+      "entity_type": "route",
+      "date": "2025-04-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "RT007",
+      "entity_type": "route",
+      "date": "2025-04-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT008",
+      "entity_type": "route",
+      "date": "2025-04-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "RT009",
+      "entity_type": "route",
+      "date": "2025-04-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT010",
+      "entity_type": "route",
+      "date": "2025-04-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "SUP001",
+      "entity_type": "supplier",
+      "date": "2025-08-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.78,
+      "level": "High"
+    },
+    {
+      "entity_id": "SUP002",
+      "entity_type": "supplier",
+      "date": "2025-08-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.78,
+      "level": "High"
+    },
+    {
+      "entity_id": "SUP003",
+      "entity_type": "supplier",
+      "date": "2025-08-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.22,
+      "level": "Low"
+    },
+    {
+      "entity_id": "SUP004",
+      "entity_type": "supplier",
+      "date": "2025-08-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "SUP005",
+      "entity_type": "supplier",
+      "date": "2025-08-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.22,
+      "level": "Low"
+    },
+    {
+      "entity_id": "SUP006",
+      "entity_type": "supplier",
+      "date": "2025-08-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "SUP007",
+      "entity_type": "supplier",
+      "date": "2025-08-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.22,
+      "level": "Low"
+    },
+    {
+      "entity_id": "SUP008",
+      "entity_type": "supplier",
+      "date": "2025-08-15",
+      "risk_type": "supplier_failure",
+      "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "PLT001",
+      "entity_type": "plant",
+      "date": "2025-08-15",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.65,
+      "level": "High"
+    },
+    {
+      "entity_id": "PLT002",
+      "entity_type": "plant",
+      "date": "2025-08-15",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.35,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "PLT003",
+      "entity_type": "plant",
+      "date": "2025-08-15",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.18,
+      "level": "Low"
+    },
+    {
+      "entity_id": "PLT004",
+      "entity_type": "plant",
+      "date": "2025-08-15",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.18,
+      "level": "Low"
+    },
+    {
+      "entity_id": "WH001",
+      "entity_type": "warehouse",
+      "date": "2025-08-15",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.25,
+      "level": "Low"
+    },
+    {
+      "entity_id": "WH002",
+      "entity_type": "warehouse",
+      "date": "2025-08-15",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.48,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "WH003",
+      "entity_type": "warehouse",
+      "date": "2025-08-15",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.25,
+      "level": "Low"
+    },
+    {
+      "entity_id": "WH004",
+      "entity_type": "warehouse",
+      "date": "2025-08-15",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.25,
+      "level": "Low"
+    },
+    {
+      "entity_id": "WH005",
+      "entity_type": "warehouse",
+      "date": "2025-08-15",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.25,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT001",
+      "entity_type": "route",
+      "date": "2025-08-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT002",
+      "entity_type": "route",
+      "date": "2025-08-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "RT003",
+      "entity_type": "route",
+      "date": "2025-08-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.68,
+      "level": "High"
+    },
+    {
+      "entity_id": "RT004",
+      "entity_type": "route",
+      "date": "2025-08-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.68,
+      "level": "High"
+    },
+    {
+      "entity_id": "RT005",
+      "entity_type": "route",
+      "date": "2025-08-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT006",
+      "entity_type": "route",
+      "date": "2025-08-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "RT007",
+      "entity_type": "route",
+      "date": "2025-08-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT008",
+      "entity_type": "route",
+      "date": "2025-08-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "RT009",
+      "entity_type": "route",
+      "date": "2025-08-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT010",
+      "entity_type": "route",
+      "date": "2025-08-15",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "SUP001",
+      "entity_type": "supplier",
+      "date": "2025-10-24",
+      "risk_type": "supplier_failure",
+      "probability": 0.22,
+      "level": "Low"
+    },
+    {
+      "entity_id": "SUP002",
+      "entity_type": "supplier",
+      "date": "2025-10-24",
+      "risk_type": "supplier_failure",
+      "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "SUP003",
+      "entity_type": "supplier",
+      "date": "2025-10-24",
+      "risk_type": "supplier_failure",
+      "probability": 0.22,
+      "level": "Low"
+    },
+    {
+      "entity_id": "SUP004",
+      "entity_type": "supplier",
+      "date": "2025-10-24",
+      "risk_type": "supplier_failure",
+      "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "SUP005",
+      "entity_type": "supplier",
+      "date": "2025-10-24",
+      "risk_type": "supplier_failure",
+      "probability": 0.22,
+      "level": "Low"
+    },
+    {
+      "entity_id": "SUP006",
+      "entity_type": "supplier",
+      "date": "2025-10-24",
+      "risk_type": "supplier_failure",
+      "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "SUP007",
+      "entity_type": "supplier",
+      "date": "2025-10-24",
+      "risk_type": "supplier_failure",
+      "probability": 0.22,
+      "level": "Low"
+    },
+    {
+      "entity_id": "SUP008",
+      "entity_type": "supplier",
+      "date": "2025-10-24",
+      "risk_type": "supplier_failure",
+      "probability": 0.45,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "PLT001",
+      "entity_type": "plant",
+      "date": "2025-10-24",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.18,
+      "level": "Low"
+    },
+    {
+      "entity_id": "PLT002",
+      "entity_type": "plant",
+      "date": "2025-10-24",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.35,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "PLT003",
+      "entity_type": "plant",
+      "date": "2025-10-24",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.18,
+      "level": "Low"
+    },
+    {
+      "entity_id": "PLT004",
+      "entity_type": "plant",
+      "date": "2025-10-24",
+      "risk_type": "manufacturing_delay",
+      "probability": 0.18,
+      "level": "Low"
+    },
+    {
+      "entity_id": "WH001",
+      "entity_type": "warehouse",
+      "date": "2025-10-24",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.72,
+      "level": "High"
+    },
+    {
+      "entity_id": "WH002",
+      "entity_type": "warehouse",
+      "date": "2025-10-24",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.48,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "WH003",
+      "entity_type": "warehouse",
+      "date": "2025-10-24",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.72,
+      "level": "High"
+    },
+    {
+      "entity_id": "WH004",
+      "entity_type": "warehouse",
+      "date": "2025-10-24",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.25,
+      "level": "Low"
+    },
+    {
+      "entity_id": "WH005",
+      "entity_type": "warehouse",
+      "date": "2025-10-24",
+      "risk_type": "warehouse_stockout",
+      "probability": 0.25,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT001",
+      "entity_type": "route",
+      "date": "2025-10-24",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT002",
+      "entity_type": "route",
+      "date": "2025-10-24",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "RT003",
+      "entity_type": "route",
+      "date": "2025-10-24",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT004",
+      "entity_type": "route",
+      "date": "2025-10-24",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "RT005",
+      "entity_type": "route",
+      "date": "2025-10-24",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT006",
+      "entity_type": "route",
+      "date": "2025-10-24",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "RT007",
+      "entity_type": "route",
+      "date": "2025-10-24",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT008",
+      "entity_type": "route",
+      "date": "2025-10-24",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
+    },
+    {
+      "entity_id": "RT009",
+      "entity_type": "route",
+      "date": "2025-10-24",
+      "risk_type": "transport_disruption",
+      "probability": 0.19,
+      "level": "Low"
+    },
+    {
+      "entity_id": "RT010",
+      "entity_type": "route",
+      "date": "2025-10-24",
+      "risk_type": "transport_disruption",
+      "probability": 0.42,
+      "level": "Medium"
     }
   ],
   "shap_features": [
