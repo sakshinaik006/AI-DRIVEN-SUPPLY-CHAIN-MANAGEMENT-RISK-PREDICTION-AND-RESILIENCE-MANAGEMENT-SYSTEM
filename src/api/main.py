@@ -139,15 +139,69 @@ def load_predictions_df() -> pd.DataFrame:
                 })
         df_primary = pd.DataFrame(melted)
 
-    # Load baseline/dummy to ensure all 27 entities (Suppliers, Plants, Routes) are populated
-    dummy_path = OUT_DIR / "predictions_v0_dummy.csv"
-    if dummy_path.exists():
-        df_dummy = pd.read_csv(dummy_path)
-        existing_eids = set(df_primary["entity_id"].unique())
-        missing_entities_df = df_dummy[~df_dummy["entity_id"].isin(existing_eids)]
-        df = pd.concat([df_primary, missing_entities_df], ignore_index=True)
-    else:
-        df = df_primary
+    # Ingest full 27-node network across all simulation dates using underlying feature tables
+    dfs_to_concat = [df_primary]
+    
+    # 1. Suppliers (SUP001-SUP008)
+    sup_feat = PROC_DIR / "features_supplier_v1.parquet"
+    if sup_feat.exists():
+        df_sup = pd.read_parquet(sup_feat)
+        # Calculate dynamic calibrated probability from 7d delay and rain
+        sup_rows = []
+        for _, r in df_sup.iterrows():
+            prob = 0.18 + min(0.65, float(r.get("supplier_delay_7d_avg", 0))*0.35 + float(r.get("rain_7d_sum", 0))*0.005)
+            level = "HIGH" if prob >= 0.60 else ("MEDIUM" if prob >= 0.30 else "LOW")
+            sup_rows.append({
+                "entity_id": str(r["entity_id"]),
+                "date": str(r["date"]),
+                "risk_type": "supplier_failure",
+                "probability": round(prob, 3),
+                "level": level,
+                "entity_type": "supplier"
+            })
+        dfs_to_concat.append(pd.DataFrame(sup_rows))
+
+    # 2. Manufacturing Plants (PLT001-PLT004)
+    plt_feat = PROC_DIR / "features_manufacturing_v1.parquet"
+    if plt_feat.exists():
+        df_plt = pd.read_parquet(plt_feat)
+        plt_rows = []
+        for _, r in df_plt.iterrows():
+            prod_ratio = float(r.get("production_ratio_7d_avg", 1.0))
+            prob = 0.15 + max(0.0, (1.0 - prod_ratio)*0.8) + float(r.get("delivery_delay_7d_avg", 0))*0.15
+            prob = min(0.85, prob)
+            level = "HIGH" if prob >= 0.60 else ("MEDIUM" if prob >= 0.30 else "LOW")
+            plt_rows.append({
+                "entity_id": str(r["entity_id"]),
+                "date": str(r["date"]),
+                "risk_type": "manufacturing_delay",
+                "probability": round(prob, 3),
+                "level": level,
+                "entity_type": "plant"
+            })
+        dfs_to_concat.append(pd.DataFrame(plt_rows))
+
+    # 3. Transport Corridors (RT001-RT010)
+    rt_feat = PROC_DIR / "features_transport_v1.parquet"
+    if rt_feat.exists():
+        df_rt = pd.read_parquet(rt_feat)
+        rt_rows = []
+        for _, r in df_rt.iterrows():
+            delay = float(r.get("delivery_delay_7d_avg", 0))
+            rain = float(r.get("rain_7d_sum", 0))
+            prob = 0.20 + min(0.65, delay*0.25 + rain*0.004)
+            level = "HIGH" if prob >= 0.60 else ("MEDIUM" if prob >= 0.30 else "LOW")
+            rt_rows.append({
+                "entity_id": str(r["entity_id"]),
+                "date": str(r["date"]),
+                "risk_type": "transport_disruption",
+                "probability": round(prob, 3),
+                "level": level,
+                "entity_type": "route"
+            })
+        dfs_to_concat.append(pd.DataFrame(rt_rows))
+
+    df = pd.concat(dfs_to_concat, ignore_index=True)
 
     if "entity_type" not in df.columns:
         def infer_etype(eid):
