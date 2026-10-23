@@ -91,7 +91,11 @@ export default function App() {
       // Fallback
       try {
         const fb = await (await fetch("/api_fallback.json")).json();
-        setData(fb);
+        const filteredFbRisks = (fb.risks || []).filter(r => !r.date || r.date === dateStr);
+        setData({
+          ...fb,
+          risks: filteredFbRisks.length > 0 ? filteredFbRisks : fb.risks
+        });
         setSource("Local Fallback Cache");
         setForecastData([
           { entity_id: "WH001", date: "2025-10-25", chronos_forecast: 118.1, patchtst_delay_forecast: 1.74 },
@@ -141,6 +145,8 @@ export default function App() {
     <div style={{
       display: "flex",
       flexDirection: "column",
+      width: "100%",
+      minHeight: "100vh",
       height: "100vh",
       overflow: "hidden",
       backgroundColor: "#f8fafc",
