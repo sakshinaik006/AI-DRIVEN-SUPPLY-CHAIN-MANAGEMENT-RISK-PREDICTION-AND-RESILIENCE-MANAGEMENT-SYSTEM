@@ -38,10 +38,10 @@ export default function App() {
   async function loadData(dateStr) {
     try {
       const [resRisks, resNet, resForecast, resMetrics] = await Promise.allSettled([
-        fetch(`http://localhost:8000/api/risks?date=${dateStr}`, { signal: AbortSignal.timeout(1500) }),
-        fetch(`http://localhost:8000/api/network-score?date=${dateStr}`, { signal: AbortSignal.timeout(1500) }),
-        fetch(`http://localhost:8000/api/forecast`, { signal: AbortSignal.timeout(1500) }),
-        fetch(`http://localhost:8000/api/metrics`, { signal: AbortSignal.timeout(1500) }),
+        fetch(`http://localhost:8000/api/risks?date=${dateStr}`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`http://localhost:8000/api/network-score?date=${dateStr}`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`http://localhost:8000/api/forecast`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`http://localhost:8000/api/metrics`, { signal: AbortSignal.timeout(8000) }),
       ]);
 
       if (resRisks.status === "fulfilled" && resRisks.value.ok) {
