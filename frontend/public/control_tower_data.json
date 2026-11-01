@@ -1,0 +1,2211 @@
+{
+  "scenarios": {
+    "2025-04-15": {
+      "name": "Scenario 1: Normal Operations (Apr 15)",
+      "desc": "All network nodes operating within safe baseline parameters"
+    },
+    "2025-08-15": {
+      "name": "Scenario 2: Typhoon & Supply Starvation (Aug 15)",
+      "desc": "Severe climate disruption at coastal supplier cascading downstream to assembly and transit"
+    },
+    "2025-10-24": {
+      "name": "Scenario 3: Retail Stockout Surge (Oct 24)",
+      "desc": "High consumer demand surge creating stockout risk at regional warehouses and upstream pull"
+    }
+  },
+  "dates": [
+    "2025-04-15",
+    "2025-08-15",
+    "2025-10-24"
+  ],
+  "scenario_data": {
+    "2025-04-15": {
+      "prediction_horizon": "Next 7 Days",
+      "last_data_update": "2025-04-15 08:00 UTC",
+      "total_suppliers": 8,
+      "total_plants": 4,
+      "total_warehouses": 5,
+      "total_routes": 10,
+      "total_entities": 27,
+      "overall_network_score": 0.06,
+      "overall_health": "Stable / Normal",
+      "high_risk_count": 0,
+      "medium_risk_count": 0,
+      "low_risk_count": 27,
+      "category_summary": {
+        "Supplier Risk": {
+          "level": "Low",
+          "affected_count": 0,
+          "total_count": 8,
+          "avg_probability": 0.06
+        },
+        "Manufacturing Risk": {
+          "level": "Low",
+          "affected_count": 0,
+          "total_count": 4,
+          "avg_probability": 0.06
+        },
+        "Warehouse Stockout": {
+          "level": "Low",
+          "affected_count": 0,
+          "total_count": 5,
+          "avg_probability": 0.06
+        },
+        "Transportation Delay": {
+          "level": "Low",
+          "affected_count": 0,
+          "total_count": 10,
+          "avg_probability": 0.06
+        }
+      },
+      "entities": [
+        {
+          "entity_id": "SUP001",
+          "name": "Hsinchu Silicon Works",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "Taiwan",
+          "city": "Hsinchu",
+          "latitude": 24.8138,
+          "longitude": 120.9675,
+          "tier": 1,
+          "probability": 0.06,
+          "level": "Low",
+          "reliability_score": 0.95,
+          "lead_time_days": 21,
+          "single_source": true,
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 88.6,
+          "news_tone": -2.536,
+          "connected_entities": [
+            "RT001"
+          ]
+        },
+        {
+          "entity_id": "SUP002",
+          "name": "Seoul Display Systems",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "South Korea",
+          "city": "Seoul",
+          "latitude": 37.5665,
+          "longitude": 126.978,
+          "tier": 1,
+          "probability": 0.06,
+          "level": "Low",
+          "reliability_score": 0.95,
+          "lead_time_days": 18,
+          "single_source": false,
+          "delay_7d_avg": 0.286,
+          "rain_7d_sum": 37.1,
+          "news_tone": -1.764,
+          "connected_entities": [
+            "RT002"
+          ]
+        },
+        {
+          "entity_id": "SUP003",
+          "name": "Icheon Memory Corp",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "South Korea",
+          "city": "Icheon",
+          "latitude": 37.2792,
+          "longitude": 127.4425,
+          "tier": 1,
+          "probability": 0.06,
+          "level": "Low",
+          "reliability_score": 0.95,
+          "lead_time_days": 16,
+          "single_source": true,
+          "delay_7d_avg": 0.143,
+          "rain_7d_sum": 21.9,
+          "news_tone": -2.039,
+          "connected_entities": [
+            "RT003"
+          ]
+        },
+        {
+          "entity_id": "SUP004",
+          "name": "Dongguan Power Cells",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Dongguan",
+          "latitude": 23.0207,
+          "longitude": 113.7518,
+          "tier": 1,
+          "probability": 0.06,
+          "level": "Low",
+          "reliability_score": 0.95,
+          "lead_time_days": 10,
+          "single_source": false,
+          "delay_7d_avg": 0.286,
+          "rain_7d_sum": 20.0,
+          "news_tone": -2.358,
+          "connected_entities": [
+            "RT004"
+          ]
+        },
+        {
+          "entity_id": "SUP005",
+          "name": "Ningbo Battery Group",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Ningbo",
+          "latitude": 29.8683,
+          "longitude": 121.544,
+          "tier": 1,
+          "probability": 0.06,
+          "level": "Low",
+          "reliability_score": 0.95,
+          "lead_time_days": 12,
+          "single_source": false,
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 24.1,
+          "news_tone": -1.677,
+          "connected_entities": []
+        },
+        {
+          "entity_id": "SUP006",
+          "name": "Suzhou Optics",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Suzhou",
+          "latitude": 31.2989,
+          "longitude": 120.5853,
+          "tier": 1,
+          "probability": 0.06,
+          "level": "Low",
+          "reliability_score": 0.95,
+          "lead_time_days": 14,
+          "single_source": false,
+          "delay_7d_avg": 0.429,
+          "rain_7d_sum": 18.5,
+          "news_tone": -2.795,
+          "connected_entities": []
+        },
+        {
+          "entity_id": "SUP007",
+          "name": "Shenzhen Display Tech",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Shenzhen",
+          "latitude": 22.5431,
+          "longitude": 114.0579,
+          "tier": 1,
+          "probability": 0.06,
+          "level": "Low",
+          "reliability_score": 0.95,
+          "lead_time_days": 12,
+          "single_source": false,
+          "delay_7d_avg": 0.714,
+          "rain_7d_sum": 32.4,
+          "news_tone": -1.768,
+          "connected_entities": []
+        },
+        {
+          "entity_id": "SUP008",
+          "name": "Pune Assembly Parts",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "India",
+          "city": "Pune",
+          "latitude": 18.5204,
+          "longitude": 73.8567,
+          "tier": 1,
+          "probability": 0.06,
+          "level": "Low",
+          "reliability_score": 0.95,
+          "lead_time_days": 7,
+          "single_source": false,
+          "delay_7d_avg": 0.143,
+          "rain_7d_sum": 0.0,
+          "news_tone": -1.313,
+          "connected_entities": [
+            "RT005"
+          ]
+        },
+        {
+          "entity_id": "PLT001",
+          "name": "Chennai Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "India",
+          "city": "Chennai",
+          "latitude": 13.0827,
+          "longitude": 80.2707,
+          "capacity_planned": 12000,
+          "actual_output": 11904,
+          "production_ratio": 0.992,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.186,
+          "rain_7d_sum": 2.9,
+          "connected_entities": [
+            "WH001",
+            "RT006"
+          ]
+        },
+        {
+          "entity_id": "PLT002",
+          "name": "Noida Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "India",
+          "city": "Noida",
+          "latitude": 28.5355,
+          "longitude": 77.391,
+          "capacity_planned": 10000,
+          "actual_output": 9800,
+          "production_ratio": 0.98,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.473,
+          "rain_7d_sum": 7.3,
+          "connected_entities": [
+            "WH005",
+            "RT007"
+          ]
+        },
+        {
+          "entity_id": "PLT003",
+          "name": "Bac Ninh Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "Vietnam",
+          "city": "Bac Ninh",
+          "latitude": 21.1861,
+          "longitude": 106.0763,
+          "capacity_planned": 15000,
+          "actual_output": 14745,
+          "production_ratio": 0.983,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.403,
+          "rain_7d_sum": 12.2,
+          "connected_entities": [
+            "WH004",
+            "RT008"
+          ]
+        },
+        {
+          "entity_id": "PLT004",
+          "name": "Shenzhen Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "China",
+          "city": "Shenzhen",
+          "latitude": 22.5431,
+          "longitude": 114.0579,
+          "capacity_planned": 20000,
+          "actual_output": 19660,
+          "production_ratio": 0.983,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.399,
+          "rain_7d_sum": 32.4,
+          "connected_entities": [
+            "WH002",
+            "WH003",
+            "RT009",
+            "RT010"
+          ]
+        },
+        {
+          "entity_id": "WH001",
+          "name": "Mumbai Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "India",
+          "city": "Mumbai",
+          "latitude": 19.076,
+          "longitude": 72.8777,
+          "safety_stock": 6000,
+          "inventory_level": 5031,
+          "stock_days_cover": 5.87,
+          "demand_7d_avg": 1036.6,
+          "probability": 0.06,
+          "level": "Low",
+          "connected_entities": [
+            "PLT001",
+            "RT006"
+          ]
+        },
+        {
+          "entity_id": "WH002",
+          "name": "Rotterdam Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "Netherlands",
+          "city": "Rotterdam",
+          "latitude": 51.9244,
+          "longitude": 4.4777,
+          "safety_stock": 5000,
+          "inventory_level": 4857,
+          "stock_days_cover": 6.8,
+          "demand_7d_avg": 929.1,
+          "probability": 0.06,
+          "level": "Low",
+          "connected_entities": [
+            "PLT004",
+            "RT010"
+          ]
+        },
+        {
+          "entity_id": "WH003",
+          "name": "Los Angeles Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "United States",
+          "city": "Los Angeles",
+          "latitude": 34.0522,
+          "longitude": -118.2437,
+          "safety_stock": 7000,
+          "inventory_level": 5890,
+          "stock_days_cover": 5.89,
+          "demand_7d_avg": 1047.9,
+          "probability": 0.06,
+          "level": "Low",
+          "connected_entities": [
+            "PLT004",
+            "RT009"
+          ]
+        },
+        {
+          "entity_id": "WH004",
+          "name": "Singapore Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "Singapore",
+          "city": "Singapore",
+          "latitude": 1.3521,
+          "longitude": 103.8198,
+          "safety_stock": 4000,
+          "inventory_level": 1971,
+          "stock_days_cover": 3.45,
+          "demand_7d_avg": 1482.6,
+          "probability": 0.06,
+          "level": "Low",
+          "connected_entities": [
+            "PLT003",
+            "RT008"
+          ]
+        },
+        {
+          "entity_id": "WH005",
+          "name": "Dubai Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "United Arab Emirates",
+          "city": "Dubai",
+          "latitude": 25.2048,
+          "longitude": 55.2708,
+          "safety_stock": 4500,
+          "inventory_level": 4326,
+          "stock_days_cover": 6.73,
+          "demand_7d_avg": 924.6,
+          "probability": 0.06,
+          "level": "Low",
+          "connected_entities": [
+            "PLT002",
+            "RT007"
+          ]
+        },
+        {
+          "entity_id": "RT001",
+          "name": "Corridor RT001 (Hsinchu -> Shenzhen)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP001",
+          "destination_id": "PLT004",
+          "shipping_mode": "air",
+          "scheduled_days": 3,
+          "distance_km": 747.0,
+          "latitude": 23.6784,
+          "longitude": 117.5127,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 8.6,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP001",
+            "PLT004"
+          ]
+        },
+        {
+          "entity_id": "RT002",
+          "name": "Corridor RT002 (Seoul -> Bac Ninh)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP002",
+          "destination_id": "PLT003",
+          "shipping_mode": "air",
+          "scheduled_days": 3,
+          "distance_km": 2712.0,
+          "latitude": 29.3763,
+          "longitude": 116.5272,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 39.8,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP002",
+            "PLT003"
+          ]
+        },
+        {
+          "entity_id": "RT003",
+          "name": "Corridor RT003 (Icheon -> Chennai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP003",
+          "destination_id": "PLT001",
+          "shipping_mode": "air",
+          "scheduled_days": 5,
+          "distance_km": 5381.0,
+          "latitude": 25.181,
+          "longitude": 103.8566,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 4.7,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP003",
+            "PLT001"
+          ]
+        },
+        {
+          "entity_id": "RT004",
+          "name": "Corridor RT004 (Dongguan -> Shenzhen)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP004",
+          "destination_id": "PLT004",
+          "shipping_mode": "road",
+          "scheduled_days": 2,
+          "distance_km": 62.0,
+          "latitude": 22.7819,
+          "longitude": 113.9049,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 20.0,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP004",
+            "PLT004"
+          ]
+        },
+        {
+          "entity_id": "RT005",
+          "name": "Corridor RT005 (Pune -> Chennai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP008",
+          "destination_id": "PLT001",
+          "shipping_mode": "road",
+          "scheduled_days": 3,
+          "distance_km": 914.0,
+          "latitude": 15.8015,
+          "longitude": 77.0637,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 0.2,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP008",
+            "PLT001"
+          ]
+        },
+        {
+          "entity_id": "RT006",
+          "name": "Corridor RT006 (Chennai -> Mumbai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT001",
+          "destination_id": "WH001",
+          "shipping_mode": "road",
+          "scheduled_days": 3,
+          "distance_km": 1033.0,
+          "latitude": 16.0794,
+          "longitude": 76.5742,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 0.0,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT001",
+            "WH001"
+          ]
+        },
+        {
+          "entity_id": "RT007",
+          "name": "Corridor RT007 (Noida -> Dubai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT002",
+          "destination_id": "WH005",
+          "shipping_mode": "sea",
+          "scheduled_days": 9,
+          "distance_km": 2222.0,
+          "latitude": 26.8701,
+          "longitude": 66.3309,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 0.8,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT002",
+            "WH005"
+          ]
+        },
+        {
+          "entity_id": "RT008",
+          "name": "Corridor RT008 (Bac Ninh -> Singapore)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT003",
+          "destination_id": "WH004",
+          "shipping_mode": "sea",
+          "scheduled_days": 6,
+          "distance_km": 2219.0,
+          "latitude": 11.2691,
+          "longitude": 104.948,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 21.6,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT003",
+            "WH004"
+          ]
+        },
+        {
+          "entity_id": "RT009",
+          "name": "Corridor RT009 (Shenzhen -> Los Angeles)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT004",
+          "destination_id": "WH003",
+          "shipping_mode": "sea",
+          "scheduled_days": 21,
+          "distance_km": 11639.0,
+          "latitude": 28.2976,
+          "longitude": -2.0929,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 0.2,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT004",
+            "WH003"
+          ]
+        },
+        {
+          "entity_id": "RT010",
+          "name": "Corridor RT010 (Shenzhen -> Rotterdam)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT004",
+          "destination_id": "WH002",
+          "shipping_mode": "sea",
+          "scheduled_days": 28,
+          "distance_km": 9299.0,
+          "latitude": 37.2338,
+          "longitude": 59.2678,
+          "probability": 0.06,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 3.1,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT004",
+            "WH002"
+          ]
+        }
+      ],
+      "recommendations": [],
+      "risk_trend": [
+        {
+          "day": "Day -6",
+          "network_risk": 0.043
+        },
+        {
+          "day": "Day -5",
+          "network_risk": 0.047
+        },
+        {
+          "day": "Day -4",
+          "network_risk": 0.051
+        },
+        {
+          "day": "Day -3",
+          "network_risk": 0.055
+        },
+        {
+          "day": "Day -2",
+          "network_risk": 0.058
+        },
+        {
+          "day": "Day -1",
+          "network_risk": 0.06
+        },
+        {
+          "day": "Today (Day 0)",
+          "network_risk": 0.06
+        },
+        {
+          "day": "Forecast (+7d)",
+          "network_risk": 0.06
+        }
+      ],
+      "alerts": []
+    },
+    "2025-08-15": {
+      "prediction_horizon": "Next 7 Days",
+      "last_data_update": "2025-08-15 08:00 UTC",
+      "total_suppliers": 8,
+      "total_plants": 4,
+      "total_warehouses": 5,
+      "total_routes": 10,
+      "total_entities": 27,
+      "overall_network_score": 0.206,
+      "overall_health": "At Risk - Critical Attention Needed",
+      "high_risk_count": 3,
+      "medium_risk_count": 4,
+      "low_risk_count": 20,
+      "category_summary": {
+        "Supplier Risk": {
+          "level": "High",
+          "affected_count": 1,
+          "total_count": 8,
+          "avg_probability": 0.164
+        },
+        "Manufacturing Risk": {
+          "level": "High",
+          "affected_count": 1,
+          "total_count": 4,
+          "avg_probability": 0.237
+        },
+        "Warehouse Stockout": {
+          "level": "Medium",
+          "affected_count": 2,
+          "total_count": 5,
+          "avg_probability": 0.234
+        },
+        "Transportation Delay": {
+          "level": "High",
+          "affected_count": 3,
+          "total_count": 10,
+          "avg_probability": 0.212
+        }
+      },
+      "entities": [
+        {
+          "entity_id": "SUP001",
+          "name": "Hsinchu Silicon Works",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "Taiwan",
+          "city": "Hsinchu",
+          "latitude": 24.8138,
+          "longitude": 120.9675,
+          "tier": 1,
+          "probability": 0.82,
+          "level": "High",
+          "reliability_score": 0.34,
+          "lead_time_days": 21,
+          "single_source": true,
+          "delay_7d_avg": 0.143,
+          "rain_7d_sum": 6.9,
+          "news_tone": -2.804,
+          "connected_entities": [
+            "RT001"
+          ]
+        },
+        {
+          "entity_id": "SUP002",
+          "name": "Seoul Display Systems",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "South Korea",
+          "city": "Seoul",
+          "latitude": 37.5665,
+          "longitude": 126.978,
+          "tier": 1,
+          "probability": 0.07,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 18,
+          "single_source": false,
+          "delay_7d_avg": 0.143,
+          "rain_7d_sum": 93.9,
+          "news_tone": -1.426,
+          "connected_entities": [
+            "RT002"
+          ]
+        },
+        {
+          "entity_id": "SUP003",
+          "name": "Icheon Memory Corp",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "South Korea",
+          "city": "Icheon",
+          "latitude": 37.2792,
+          "longitude": 127.4425,
+          "tier": 1,
+          "probability": 0.07,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 16,
+          "single_source": true,
+          "delay_7d_avg": 0.286,
+          "rain_7d_sum": 45.5,
+          "news_tone": -1.869,
+          "connected_entities": [
+            "RT003"
+          ]
+        },
+        {
+          "entity_id": "SUP004",
+          "name": "Dongguan Power Cells",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Dongguan",
+          "latitude": 23.0207,
+          "longitude": 113.7518,
+          "tier": 1,
+          "probability": 0.07,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 10,
+          "single_source": false,
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 49.3,
+          "news_tone": -1.912,
+          "connected_entities": [
+            "RT004"
+          ]
+        },
+        {
+          "entity_id": "SUP005",
+          "name": "Ningbo Battery Group",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Ningbo",
+          "latitude": 29.8683,
+          "longitude": 121.544,
+          "tier": 1,
+          "probability": 0.07,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 12,
+          "single_source": false,
+          "delay_7d_avg": 0.429,
+          "rain_7d_sum": 2.6,
+          "news_tone": -2.219,
+          "connected_entities": []
+        },
+        {
+          "entity_id": "SUP006",
+          "name": "Suzhou Optics",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Suzhou",
+          "latitude": 31.2989,
+          "longitude": 120.5853,
+          "tier": 1,
+          "probability": 0.07,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 14,
+          "single_source": false,
+          "delay_7d_avg": 0.286,
+          "rain_7d_sum": 13.4,
+          "news_tone": -3.318,
+          "connected_entities": []
+        },
+        {
+          "entity_id": "SUP007",
+          "name": "Shenzhen Display Tech",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Shenzhen",
+          "latitude": 22.5431,
+          "longitude": 114.0579,
+          "tier": 1,
+          "probability": 0.07,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 12,
+          "single_source": false,
+          "delay_7d_avg": 0.286,
+          "rain_7d_sum": 66.0,
+          "news_tone": -2.125,
+          "connected_entities": []
+        },
+        {
+          "entity_id": "SUP008",
+          "name": "Pune Assembly Parts",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "India",
+          "city": "Pune",
+          "latitude": 18.5204,
+          "longitude": 73.8567,
+          "tier": 1,
+          "probability": 0.07,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 7,
+          "single_source": false,
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 21.2,
+          "news_tone": -1.831,
+          "connected_entities": [
+            "RT005"
+          ]
+        },
+        {
+          "entity_id": "PLT001",
+          "name": "Chennai Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "India",
+          "city": "Chennai",
+          "latitude": 13.0827,
+          "longitude": 80.2707,
+          "capacity_planned": 12000,
+          "actual_output": 11304,
+          "production_ratio": 0.942,
+          "probability": 0.07,
+          "level": "Low",
+          "delay_7d_avg": 1.38,
+          "rain_7d_sum": 72.7,
+          "connected_entities": [
+            "WH001",
+            "RT006"
+          ]
+        },
+        {
+          "entity_id": "PLT002",
+          "name": "Noida Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "India",
+          "city": "Noida",
+          "latitude": 28.5355,
+          "longitude": 77.391,
+          "capacity_planned": 10000,
+          "actual_output": 9860,
+          "production_ratio": 0.986,
+          "probability": 0.07,
+          "level": "Low",
+          "delay_7d_avg": 0.341,
+          "rain_7d_sum": 22.8,
+          "connected_entities": [
+            "WH005",
+            "RT007"
+          ]
+        },
+        {
+          "entity_id": "PLT003",
+          "name": "Bac Ninh Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "Vietnam",
+          "city": "Bac Ninh",
+          "latitude": 21.1861,
+          "longitude": 106.0763,
+          "capacity_planned": 15000,
+          "actual_output": 14880,
+          "production_ratio": 0.992,
+          "probability": 0.07,
+          "level": "Low",
+          "delay_7d_avg": 0.187,
+          "rain_7d_sum": 32.0,
+          "connected_entities": [
+            "WH004",
+            "RT008"
+          ]
+        },
+        {
+          "entity_id": "PLT004",
+          "name": "Shenzhen Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "China",
+          "city": "Shenzhen",
+          "latitude": 22.5431,
+          "longitude": 114.0579,
+          "capacity_planned": 20000,
+          "actual_output": 13000,
+          "production_ratio": 0.65,
+          "probability": 0.74,
+          "level": "High",
+          "delay_7d_avg": 0.334,
+          "rain_7d_sum": 66.0,
+          "connected_entities": [
+            "WH002",
+            "WH003",
+            "RT009",
+            "RT010"
+          ]
+        },
+        {
+          "entity_id": "WH001",
+          "name": "Mumbai Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "India",
+          "city": "Mumbai",
+          "latitude": 19.076,
+          "longitude": 72.8777,
+          "safety_stock": 6000,
+          "inventory_level": 4825,
+          "stock_days_cover": 5.63,
+          "demand_7d_avg": 1074.3,
+          "probability": 0.07,
+          "level": "Low",
+          "connected_entities": [
+            "PLT001",
+            "RT006"
+          ]
+        },
+        {
+          "entity_id": "WH002",
+          "name": "Rotterdam Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "Netherlands",
+          "city": "Rotterdam",
+          "latitude": 51.9244,
+          "longitude": 4.4777,
+          "safety_stock": 5000,
+          "inventory_level": 3000,
+          "stock_days_cover": 4.2,
+          "demand_7d_avg": 1001.4,
+          "probability": 0.48,
+          "level": "Medium",
+          "connected_entities": [
+            "PLT004",
+            "RT010"
+          ]
+        },
+        {
+          "entity_id": "WH003",
+          "name": "Los Angeles Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "United States",
+          "city": "Los Angeles",
+          "latitude": 34.0522,
+          "longitude": -118.2437,
+          "safety_stock": 7000,
+          "inventory_level": 4200,
+          "stock_days_cover": 4.2,
+          "demand_7d_avg": 960.1,
+          "probability": 0.48,
+          "level": "Medium",
+          "connected_entities": [
+            "PLT004",
+            "RT009"
+          ]
+        },
+        {
+          "entity_id": "WH004",
+          "name": "Singapore Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "Singapore",
+          "city": "Singapore",
+          "latitude": 1.3521,
+          "longitude": 103.8198,
+          "safety_stock": 4000,
+          "inventory_level": 3862,
+          "stock_days_cover": 6.76,
+          "demand_7d_avg": 925.1,
+          "probability": 0.07,
+          "level": "Low",
+          "connected_entities": [
+            "PLT003",
+            "RT008"
+          ]
+        },
+        {
+          "entity_id": "WH005",
+          "name": "Dubai Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "United Arab Emirates",
+          "city": "Dubai",
+          "latitude": 25.2048,
+          "longitude": 55.2708,
+          "safety_stock": 4500,
+          "inventory_level": 4770,
+          "stock_days_cover": 7.42,
+          "demand_7d_avg": 868.7,
+          "probability": 0.07,
+          "level": "Low",
+          "connected_entities": [
+            "PLT002",
+            "RT007"
+          ]
+        },
+        {
+          "entity_id": "RT001",
+          "name": "Corridor RT001 (Hsinchu -> Shenzhen)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP001",
+          "destination_id": "PLT004",
+          "shipping_mode": "air",
+          "scheduled_days": 3,
+          "distance_km": 747.0,
+          "latitude": 23.6784,
+          "longitude": 117.5127,
+          "probability": 0.75,
+          "level": "High",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 114.2,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP001",
+            "PLT004"
+          ]
+        },
+        {
+          "entity_id": "RT002",
+          "name": "Corridor RT002 (Seoul -> Bac Ninh)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP002",
+          "destination_id": "PLT003",
+          "shipping_mode": "air",
+          "scheduled_days": 3,
+          "distance_km": 2712.0,
+          "latitude": 29.3763,
+          "longitude": 116.5272,
+          "probability": 0.07,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 7.9,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP002",
+            "PLT003"
+          ]
+        },
+        {
+          "entity_id": "RT003",
+          "name": "Corridor RT003 (Icheon -> Chennai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP003",
+          "destination_id": "PLT001",
+          "shipping_mode": "air",
+          "scheduled_days": 5,
+          "distance_km": 5381.0,
+          "latitude": 25.181,
+          "longitude": 103.8566,
+          "probability": 0.07,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 43.3,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP003",
+            "PLT001"
+          ]
+        },
+        {
+          "entity_id": "RT004",
+          "name": "Corridor RT004 (Dongguan -> Shenzhen)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP004",
+          "destination_id": "PLT004",
+          "shipping_mode": "road",
+          "scheduled_days": 2,
+          "distance_km": 62.0,
+          "latitude": 22.7819,
+          "longitude": 113.9049,
+          "probability": 0.07,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 47.6,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP004",
+            "PLT004"
+          ]
+        },
+        {
+          "entity_id": "RT005",
+          "name": "Corridor RT005 (Pune -> Chennai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP008",
+          "destination_id": "PLT001",
+          "shipping_mode": "road",
+          "scheduled_days": 3,
+          "distance_km": 914.0,
+          "latitude": 15.8015,
+          "longitude": 77.0637,
+          "probability": 0.07,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 77.3,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP008",
+            "PLT001"
+          ]
+        },
+        {
+          "entity_id": "RT006",
+          "name": "Corridor RT006 (Chennai -> Mumbai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT001",
+          "destination_id": "WH001",
+          "shipping_mode": "road",
+          "scheduled_days": 3,
+          "distance_km": 1033.0,
+          "latitude": 16.0794,
+          "longitude": 76.5742,
+          "probability": 0.07,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 45.4,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT001",
+            "WH001"
+          ]
+        },
+        {
+          "entity_id": "RT007",
+          "name": "Corridor RT007 (Noida -> Dubai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT002",
+          "destination_id": "WH005",
+          "shipping_mode": "sea",
+          "scheduled_days": 9,
+          "distance_km": 2222.0,
+          "latitude": 26.8701,
+          "longitude": 66.3309,
+          "probability": 0.07,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 1.2,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT002",
+            "WH005"
+          ]
+        },
+        {
+          "entity_id": "RT008",
+          "name": "Corridor RT008 (Bac Ninh -> Singapore)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT003",
+          "destination_id": "WH004",
+          "shipping_mode": "sea",
+          "scheduled_days": 6,
+          "distance_km": 2219.0,
+          "latitude": 11.2691,
+          "longitude": 104.948,
+          "probability": 0.07,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 86.6,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT003",
+            "WH004"
+          ]
+        },
+        {
+          "entity_id": "RT009",
+          "name": "Corridor RT009 (Shenzhen -> Los Angeles)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT004",
+          "destination_id": "WH003",
+          "shipping_mode": "sea",
+          "scheduled_days": 21,
+          "distance_km": 11639.0,
+          "latitude": 28.2976,
+          "longitude": -2.0929,
+          "probability": 0.44,
+          "level": "Medium",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 0.0,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT004",
+            "WH003"
+          ]
+        },
+        {
+          "entity_id": "RT010",
+          "name": "Corridor RT010 (Shenzhen -> Rotterdam)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT004",
+          "destination_id": "WH002",
+          "shipping_mode": "sea",
+          "scheduled_days": 28,
+          "distance_km": 9299.0,
+          "latitude": 37.2338,
+          "longitude": 59.2678,
+          "probability": 0.44,
+          "level": "Medium",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 0.0,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT004",
+            "WH002"
+          ]
+        }
+      ],
+      "recommendations": [
+        {
+          "id": "REC-SUP001",
+          "category": "Supplier Risk",
+          "entity_id": "SUP001",
+          "entity_name": "Hsinchu Silicon Works",
+          "priority": "Critical",
+          "action": "Activate secondary dual-source supplier (Berlin/Ningbo) and buffer inventory for SUP001.",
+          "status": "Action Required",
+          "mitigation_effect": "Reduces supplier disruption probability from 82% to 25%",
+          "reason": "High failure risk (82%) due to climate storm and rolling delivery lag"
+        },
+        {
+          "id": "REC-PLT004",
+          "category": "Manufacturing Risk",
+          "entity_id": "PLT004",
+          "entity_name": "Shenzhen Phone Plant",
+          "priority": "Critical",
+          "action": "Rebalance assembly schedule and shift batch production from PLT004 to auxiliary plant PLT001.",
+          "status": "Action Required",
+          "mitigation_effect": "Prevents line stoppage; recovers production throughput to 94%",
+          "reason": "Assembly starvation due to delayed parts from upstream inbound routes"
+        },
+        {
+          "id": "REC-WH002",
+          "category": "Warehouse Risk",
+          "entity_id": "WH002",
+          "entity_name": "Rotterdam Distribution Centre",
+          "priority": "Moderate",
+          "action": "Increase safety stock coverage buffer by +25% and trigger emergency cross-dock rebalancing for WH002.",
+          "status": "Action Required",
+          "mitigation_effect": "Restores days-of-supply inventory cover to safe zone (>6 days)",
+          "reason": "Stockout risk (48%) due to demand surge and thin safety buffer"
+        },
+        {
+          "id": "REC-WH003",
+          "category": "Warehouse Risk",
+          "entity_id": "WH003",
+          "entity_name": "Los Angeles Distribution Centre",
+          "priority": "Moderate",
+          "action": "Increase safety stock coverage buffer by +25% and trigger emergency cross-dock rebalancing for WH003.",
+          "status": "Action Required",
+          "mitigation_effect": "Restores days-of-supply inventory cover to safe zone (>6 days)",
+          "reason": "Stockout risk (48%) due to demand surge and thin safety buffer"
+        },
+        {
+          "id": "REC-RT001",
+          "category": "Transportation Risk",
+          "entity_id": "RT001",
+          "entity_name": "Corridor RT001 (Hsinchu -> Shenzhen)",
+          "priority": "Critical",
+          "action": "Reroute critical express shipments along corridor RT001 to alternative air cargo route.",
+          "status": "Action Required",
+          "mitigation_effect": "Avoids 4.5 days maritime port dwell delay",
+          "reason": "Corridor bottleneck and adverse weather advisory"
+        },
+        {
+          "id": "REC-RT009",
+          "category": "Transportation Risk",
+          "entity_id": "RT009",
+          "entity_name": "Corridor RT009 (Shenzhen -> Los Angeles)",
+          "priority": "Moderate",
+          "action": "Reroute critical express shipments along corridor RT009 to alternative air cargo route.",
+          "status": "Action Required",
+          "mitigation_effect": "Avoids 4.5 days maritime port dwell delay",
+          "reason": "Corridor bottleneck and adverse weather advisory"
+        },
+        {
+          "id": "REC-RT010",
+          "category": "Transportation Risk",
+          "entity_id": "RT010",
+          "entity_name": "Corridor RT010 (Shenzhen -> Rotterdam)",
+          "priority": "Moderate",
+          "action": "Reroute critical express shipments along corridor RT010 to alternative air cargo route.",
+          "status": "Action Required",
+          "mitigation_effect": "Avoids 4.5 days maritime port dwell delay",
+          "reason": "Corridor bottleneck and adverse weather advisory"
+        }
+      ],
+      "risk_trend": [
+        {
+          "day": "Day -6",
+          "network_risk": 0.148
+        },
+        {
+          "day": "Day -5",
+          "network_risk": 0.16
+        },
+        {
+          "day": "Day -4",
+          "network_risk": 0.175
+        },
+        {
+          "day": "Day -3",
+          "network_risk": 0.187
+        },
+        {
+          "day": "Day -2",
+          "network_risk": 0.197
+        },
+        {
+          "day": "Day -1",
+          "network_risk": 0.201
+        },
+        {
+          "day": "Today (Day 0)",
+          "network_risk": 0.206
+        },
+        {
+          "day": "Forecast (+7d)",
+          "network_risk": 0.222
+        }
+      ],
+      "alerts": [
+        {
+          "id": "ALT-SUP001",
+          "severity": "High",
+          "message": "Hsinchu Silicon Works (SUP001) breached failure threshold with 82% probability."
+        },
+        {
+          "id": "ALT-PLT004",
+          "severity": "High",
+          "message": "Shenzhen Phone Plant (PLT004) breached failure threshold with 74% probability."
+        },
+        {
+          "id": "ALT-RT001",
+          "severity": "High",
+          "message": "Corridor RT001 (Hsinchu -> Shenzhen) (RT001) breached failure threshold with 75% probability."
+        },
+        {
+          "id": "ALT-WH002",
+          "severity": "Medium",
+          "message": "Rotterdam Distribution Centre (WH002) elevated risk detected (48%)."
+        },
+        {
+          "id": "ALT-WH003",
+          "severity": "Medium",
+          "message": "Los Angeles Distribution Centre (WH003) elevated risk detected (48%)."
+        },
+        {
+          "id": "ALT-RT009",
+          "severity": "Medium",
+          "message": "Corridor RT009 (Shenzhen -> Los Angeles) (RT009) elevated risk detected (44%)."
+        },
+        {
+          "id": "ALT-RT010",
+          "severity": "Medium",
+          "message": "Corridor RT010 (Shenzhen -> Rotterdam) (RT010) elevated risk detected (44%)."
+        }
+      ]
+    },
+    "2025-10-24": {
+      "prediction_horizon": "Next 7 Days",
+      "last_data_update": "2025-10-24 08:00 UTC",
+      "total_suppliers": 8,
+      "total_plants": 4,
+      "total_warehouses": 5,
+      "total_routes": 10,
+      "total_entities": 27,
+      "overall_network_score": 0.168,
+      "overall_health": "At Risk - Critical Attention Needed",
+      "high_risk_count": 2,
+      "medium_risk_count": 3,
+      "low_risk_count": 22,
+      "category_summary": {
+        "Supplier Risk": {
+          "level": "Medium",
+          "affected_count": 1,
+          "total_count": 8,
+          "avg_probability": 0.114
+        },
+        "Manufacturing Risk": {
+          "level": "Medium",
+          "affected_count": 1,
+          "total_count": 4,
+          "avg_probability": 0.175
+        },
+        "Warehouse Stockout": {
+          "level": "High",
+          "affected_count": 1,
+          "total_count": 5,
+          "avg_probability": 0.22
+        },
+        "Transportation Delay": {
+          "level": "High",
+          "affected_count": 2,
+          "total_count": 10,
+          "avg_probability": 0.183
+        }
+      },
+      "entities": [
+        {
+          "entity_id": "SUP001",
+          "name": "Hsinchu Silicon Works",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "Taiwan",
+          "city": "Hsinchu",
+          "latitude": 24.8138,
+          "longitude": 120.9675,
+          "tier": 1,
+          "probability": 0.08,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 21,
+          "single_source": true,
+          "delay_7d_avg": 0.143,
+          "rain_7d_sum": 172.4,
+          "news_tone": -3.101,
+          "connected_entities": [
+            "RT001"
+          ]
+        },
+        {
+          "entity_id": "SUP002",
+          "name": "Seoul Display Systems",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "South Korea",
+          "city": "Seoul",
+          "latitude": 37.5665,
+          "longitude": 126.978,
+          "tier": 1,
+          "probability": 0.08,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 18,
+          "single_source": false,
+          "delay_7d_avg": 0.143,
+          "rain_7d_sum": 18.7,
+          "news_tone": -1.764,
+          "connected_entities": [
+            "RT002"
+          ]
+        },
+        {
+          "entity_id": "SUP003",
+          "name": "Icheon Memory Corp",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "South Korea",
+          "city": "Icheon",
+          "latitude": 37.2792,
+          "longitude": 127.4425,
+          "tier": 1,
+          "probability": 0.35,
+          "level": "Medium",
+          "reliability_score": 0.72,
+          "lead_time_days": 16,
+          "single_source": true,
+          "delay_7d_avg": 0.143,
+          "rain_7d_sum": 22.8,
+          "news_tone": -1.271,
+          "connected_entities": [
+            "RT003"
+          ]
+        },
+        {
+          "entity_id": "SUP004",
+          "name": "Dongguan Power Cells",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Dongguan",
+          "latitude": 23.0207,
+          "longitude": 113.7518,
+          "tier": 1,
+          "probability": 0.08,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 10,
+          "single_source": false,
+          "delay_7d_avg": 0.429,
+          "rain_7d_sum": 8.4,
+          "news_tone": -2.267,
+          "connected_entities": [
+            "RT004"
+          ]
+        },
+        {
+          "entity_id": "SUP005",
+          "name": "Ningbo Battery Group",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Ningbo",
+          "latitude": 29.8683,
+          "longitude": 121.544,
+          "tier": 1,
+          "probability": 0.08,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 12,
+          "single_source": false,
+          "delay_7d_avg": 0.143,
+          "rain_7d_sum": 21.9,
+          "news_tone": -2.041,
+          "connected_entities": []
+        },
+        {
+          "entity_id": "SUP006",
+          "name": "Suzhou Optics",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Suzhou",
+          "latitude": 31.2989,
+          "longitude": 120.5853,
+          "tier": 1,
+          "probability": 0.08,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 14,
+          "single_source": false,
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 14.4,
+          "news_tone": -1.651,
+          "connected_entities": []
+        },
+        {
+          "entity_id": "SUP007",
+          "name": "Shenzhen Display Tech",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "China",
+          "city": "Shenzhen",
+          "latitude": 22.5431,
+          "longitude": 114.0579,
+          "tier": 1,
+          "probability": 0.08,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 12,
+          "single_source": false,
+          "delay_7d_avg": 0.429,
+          "rain_7d_sum": 24.0,
+          "news_tone": -1.385,
+          "connected_entities": []
+        },
+        {
+          "entity_id": "SUP008",
+          "name": "Pune Assembly Parts",
+          "type": "supplier",
+          "category": "Supplier Risk",
+          "country": "India",
+          "city": "Pune",
+          "latitude": 18.5204,
+          "longitude": 73.8567,
+          "tier": 1,
+          "probability": 0.08,
+          "level": "Low",
+          "reliability_score": 0.94,
+          "lead_time_days": 7,
+          "single_source": false,
+          "delay_7d_avg": 0.286,
+          "rain_7d_sum": 11.8,
+          "news_tone": -2.312,
+          "connected_entities": [
+            "RT005"
+          ]
+        },
+        {
+          "entity_id": "PLT001",
+          "name": "Chennai Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "India",
+          "city": "Chennai",
+          "latitude": 13.0827,
+          "longitude": 80.2707,
+          "capacity_planned": 12000,
+          "actual_output": 11880,
+          "production_ratio": 0.99,
+          "probability": 0.46,
+          "level": "Medium",
+          "delay_7d_avg": 0.231,
+          "rain_7d_sum": 155.2,
+          "connected_entities": [
+            "WH001",
+            "RT006"
+          ]
+        },
+        {
+          "entity_id": "PLT002",
+          "name": "Noida Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "India",
+          "city": "Noida",
+          "latitude": 28.5355,
+          "longitude": 77.391,
+          "capacity_planned": 10000,
+          "actual_output": 9830,
+          "production_ratio": 0.983,
+          "probability": 0.08,
+          "level": "Low",
+          "delay_7d_avg": 0.407,
+          "rain_7d_sum": 0.0,
+          "connected_entities": [
+            "WH005",
+            "RT007"
+          ]
+        },
+        {
+          "entity_id": "PLT003",
+          "name": "Bac Ninh Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "Vietnam",
+          "city": "Bac Ninh",
+          "latitude": 21.1861,
+          "longitude": 106.0763,
+          "capacity_planned": 15000,
+          "actual_output": 14790,
+          "production_ratio": 0.986,
+          "probability": 0.08,
+          "level": "Low",
+          "delay_7d_avg": 0.337,
+          "rain_7d_sum": 12.0,
+          "connected_entities": [
+            "WH004",
+            "RT008"
+          ]
+        },
+        {
+          "entity_id": "PLT004",
+          "name": "Shenzhen Phone Plant",
+          "type": "plant",
+          "category": "Manufacturing Risk",
+          "country": "China",
+          "city": "Shenzhen",
+          "latitude": 22.5431,
+          "longitude": 114.0579,
+          "capacity_planned": 20000,
+          "actual_output": 19580,
+          "production_ratio": 0.979,
+          "probability": 0.08,
+          "level": "Low",
+          "delay_7d_avg": 0.497,
+          "rain_7d_sum": 24.0,
+          "connected_entities": [
+            "WH002",
+            "WH003",
+            "RT009",
+            "RT010"
+          ]
+        },
+        {
+          "entity_id": "WH001",
+          "name": "Mumbai Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "India",
+          "city": "Mumbai",
+          "latitude": 19.076,
+          "longitude": 72.8777,
+          "safety_stock": 6000,
+          "inventory_level": 2057,
+          "stock_days_cover": 2.4,
+          "demand_7d_avg": 1021.0,
+          "probability": 0.78,
+          "level": "High",
+          "connected_entities": [
+            "PLT001",
+            "RT006"
+          ]
+        },
+        {
+          "entity_id": "WH002",
+          "name": "Rotterdam Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "Netherlands",
+          "city": "Rotterdam",
+          "latitude": 51.9244,
+          "longitude": 4.4777,
+          "safety_stock": 5000,
+          "inventory_level": 4171,
+          "stock_days_cover": 5.84,
+          "demand_7d_avg": 1028.7,
+          "probability": 0.08,
+          "level": "Low",
+          "connected_entities": [
+            "PLT004",
+            "RT010"
+          ]
+        },
+        {
+          "entity_id": "WH003",
+          "name": "Los Angeles Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "United States",
+          "city": "Los Angeles",
+          "latitude": 34.0522,
+          "longitude": -118.2437,
+          "safety_stock": 7000,
+          "inventory_level": 6360,
+          "stock_days_cover": 6.36,
+          "demand_7d_avg": 993.3,
+          "probability": 0.08,
+          "level": "Low",
+          "connected_entities": [
+            "PLT004",
+            "RT009"
+          ]
+        },
+        {
+          "entity_id": "WH004",
+          "name": "Singapore Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "Singapore",
+          "city": "Singapore",
+          "latitude": 1.3521,
+          "longitude": 103.8198,
+          "safety_stock": 4000,
+          "inventory_level": 3302,
+          "stock_days_cover": 5.78,
+          "demand_7d_avg": 1061.9,
+          "probability": 0.08,
+          "level": "Low",
+          "connected_entities": [
+            "PLT003",
+            "RT008"
+          ]
+        },
+        {
+          "entity_id": "WH005",
+          "name": "Dubai Distribution Centre",
+          "type": "warehouse",
+          "category": "Warehouse Stockout",
+          "country": "United Arab Emirates",
+          "city": "Dubai",
+          "latitude": 25.2048,
+          "longitude": 55.2708,
+          "safety_stock": 4500,
+          "inventory_level": 3947,
+          "stock_days_cover": 6.14,
+          "demand_7d_avg": 1005.0,
+          "probability": 0.08,
+          "level": "Low",
+          "connected_entities": [
+            "PLT002",
+            "RT007"
+          ]
+        },
+        {
+          "entity_id": "RT001",
+          "name": "Corridor RT001 (Hsinchu -> Shenzhen)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP001",
+          "destination_id": "PLT004",
+          "shipping_mode": "air",
+          "scheduled_days": 3,
+          "distance_km": 747.0,
+          "latitude": 23.6784,
+          "longitude": 117.5127,
+          "probability": 0.08,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 3.1,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP001",
+            "PLT004"
+          ]
+        },
+        {
+          "entity_id": "RT002",
+          "name": "Corridor RT002 (Seoul -> Bac Ninh)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP002",
+          "destination_id": "PLT003",
+          "shipping_mode": "air",
+          "scheduled_days": 3,
+          "distance_km": 2712.0,
+          "latitude": 29.3763,
+          "longitude": 116.5272,
+          "probability": 0.08,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 1.3,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP002",
+            "PLT003"
+          ]
+        },
+        {
+          "entity_id": "RT003",
+          "name": "Corridor RT003 (Icheon -> Chennai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP003",
+          "destination_id": "PLT001",
+          "shipping_mode": "air",
+          "scheduled_days": 5,
+          "distance_km": 5381.0,
+          "latitude": 25.181,
+          "longitude": 103.8566,
+          "probability": 0.44,
+          "level": "Medium",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 47.3,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP003",
+            "PLT001"
+          ]
+        },
+        {
+          "entity_id": "RT004",
+          "name": "Corridor RT004 (Dongguan -> Shenzhen)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP004",
+          "destination_id": "PLT004",
+          "shipping_mode": "road",
+          "scheduled_days": 2,
+          "distance_km": 62.0,
+          "latitude": 22.7819,
+          "longitude": 113.9049,
+          "probability": 0.08,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 16.9,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP004",
+            "PLT004"
+          ]
+        },
+        {
+          "entity_id": "RT005",
+          "name": "Corridor RT005 (Pune -> Chennai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "inbound",
+          "origin_id": "SUP008",
+          "destination_id": "PLT001",
+          "shipping_mode": "road",
+          "scheduled_days": 3,
+          "distance_km": 914.0,
+          "latitude": 15.8015,
+          "longitude": 77.0637,
+          "probability": 0.08,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 43.9,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "SUP008",
+            "PLT001"
+          ]
+        },
+        {
+          "entity_id": "RT006",
+          "name": "Corridor RT006 (Chennai -> Mumbai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT001",
+          "destination_id": "WH001",
+          "shipping_mode": "road",
+          "scheduled_days": 3,
+          "distance_km": 1033.0,
+          "latitude": 16.0794,
+          "longitude": 76.5742,
+          "probability": 0.75,
+          "level": "High",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 41.4,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT001",
+            "WH001"
+          ]
+        },
+        {
+          "entity_id": "RT007",
+          "name": "Corridor RT007 (Noida -> Dubai)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT002",
+          "destination_id": "WH005",
+          "shipping_mode": "sea",
+          "scheduled_days": 9,
+          "distance_km": 2222.0,
+          "latitude": 26.8701,
+          "longitude": 66.3309,
+          "probability": 0.08,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 0.0,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT002",
+            "WH005"
+          ]
+        },
+        {
+          "entity_id": "RT008",
+          "name": "Corridor RT008 (Bac Ninh -> Singapore)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT003",
+          "destination_id": "WH004",
+          "shipping_mode": "sea",
+          "scheduled_days": 6,
+          "distance_km": 2219.0,
+          "latitude": 11.2691,
+          "longitude": 104.948,
+          "probability": 0.08,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 35.7,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT003",
+            "WH004"
+          ]
+        },
+        {
+          "entity_id": "RT009",
+          "name": "Corridor RT009 (Shenzhen -> Los Angeles)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT004",
+          "destination_id": "WH003",
+          "shipping_mode": "sea",
+          "scheduled_days": 21,
+          "distance_km": 11639.0,
+          "latitude": 28.2976,
+          "longitude": -2.0929,
+          "probability": 0.08,
+          "level": "Low",
+          "delay_7d_avg": 0.0,
+          "rain_7d_sum": 0.4,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT004",
+            "WH003"
+          ]
+        },
+        {
+          "entity_id": "RT010",
+          "name": "Corridor RT010 (Shenzhen -> Rotterdam)",
+          "type": "route",
+          "category": "Transportation Delay",
+          "route_type": "outbound",
+          "origin_id": "PLT004",
+          "destination_id": "WH002",
+          "shipping_mode": "sea",
+          "scheduled_days": 28,
+          "distance_km": 9299.0,
+          "latitude": 37.2338,
+          "longitude": 59.2678,
+          "probability": 0.08,
+          "level": "Low",
+          "delay_7d_avg": 0.143,
+          "rain_7d_sum": 0.0,
+          "port_news_tone": -0.5,
+          "connected_entities": [
+            "PLT004",
+            "WH002"
+          ]
+        }
+      ],
+      "recommendations": [
+        {
+          "id": "REC-SUP003",
+          "category": "Supplier Risk",
+          "entity_id": "SUP003",
+          "entity_name": "Icheon Memory Corp",
+          "priority": "Moderate",
+          "action": "Activate secondary dual-source supplier (Berlin/Ningbo) and buffer inventory for SUP003.",
+          "status": "Action Required",
+          "mitigation_effect": "Reduces supplier disruption probability from 82% to 25%",
+          "reason": "High failure risk (35%) due to climate storm and rolling delivery lag"
+        },
+        {
+          "id": "REC-PLT001",
+          "category": "Manufacturing Risk",
+          "entity_id": "PLT001",
+          "entity_name": "Chennai Phone Plant",
+          "priority": "Moderate",
+          "action": "Rebalance assembly schedule and shift batch production from PLT001 to auxiliary plant PLT001.",
+          "status": "Action Required",
+          "mitigation_effect": "Prevents line stoppage; recovers production throughput to 94%",
+          "reason": "Assembly starvation due to delayed parts from upstream inbound routes"
+        },
+        {
+          "id": "REC-WH001",
+          "category": "Warehouse Risk",
+          "entity_id": "WH001",
+          "entity_name": "Mumbai Distribution Centre",
+          "priority": "Critical",
+          "action": "Increase safety stock coverage buffer by +25% and trigger emergency cross-dock rebalancing for WH001.",
+          "status": "Action Required",
+          "mitigation_effect": "Restores days-of-supply inventory cover to safe zone (>6 days)",
+          "reason": "Stockout risk (78%) due to demand surge and thin safety buffer"
+        },
+        {
+          "id": "REC-RT003",
+          "category": "Transportation Risk",
+          "entity_id": "RT003",
+          "entity_name": "Corridor RT003 (Icheon -> Chennai)",
+          "priority": "Moderate",
+          "action": "Reroute critical express shipments along corridor RT003 to alternative air cargo route.",
+          "status": "Action Required",
+          "mitigation_effect": "Avoids 4.5 days maritime port dwell delay",
+          "reason": "Corridor bottleneck and adverse weather advisory"
+        },
+        {
+          "id": "REC-RT006",
+          "category": "Transportation Risk",
+          "entity_id": "RT006",
+          "entity_name": "Corridor RT006 (Chennai -> Mumbai)",
+          "priority": "Critical",
+          "action": "Reroute critical express shipments along corridor RT006 to alternative air cargo route.",
+          "status": "Action Required",
+          "mitigation_effect": "Avoids 4.5 days maritime port dwell delay",
+          "reason": "Corridor bottleneck and adverse weather advisory"
+        }
+      ],
+      "risk_trend": [
+        {
+          "day": "Day -6",
+          "network_risk": 0.121
+        },
+        {
+          "day": "Day -5",
+          "network_risk": 0.131
+        },
+        {
+          "day": "Day -4",
+          "network_risk": 0.143
+        },
+        {
+          "day": "Day -3",
+          "network_risk": 0.153
+        },
+        {
+          "day": "Day -2",
+          "network_risk": 0.161
+        },
+        {
+          "day": "Day -1",
+          "network_risk": 0.165
+        },
+        {
+          "day": "Today (Day 0)",
+          "network_risk": 0.168
+        },
+        {
+          "day": "Forecast (+7d)",
+          "network_risk": 0.182
+        }
+      ],
+      "alerts": [
+        {
+          "id": "ALT-WH001",
+          "severity": "High",
+          "message": "Mumbai Distribution Centre (WH001) breached failure threshold with 78% probability."
+        },
+        {
+          "id": "ALT-RT006",
+          "severity": "High",
+          "message": "Corridor RT006 (Chennai -> Mumbai) (RT006) breached failure threshold with 75% probability."
+        },
+        {
+          "id": "ALT-SUP003",
+          "severity": "Medium",
+          "message": "Icheon Memory Corp (SUP003) elevated risk detected (35%)."
+        },
+        {
+          "id": "ALT-PLT001",
+          "severity": "Medium",
+          "message": "Chennai Phone Plant (PLT001) elevated risk detected (46%)."
+        },
+        {
+          "id": "ALT-RT003",
+          "severity": "Medium",
+          "message": "Corridor RT003 (Icheon -> Chennai) (RT003) elevated risk detected (44%)."
+        }
+      ]
+    }
+  }
+}
