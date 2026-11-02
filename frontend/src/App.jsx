@@ -1,137 +1,106 @@
 import React, { useState, useEffect } from "react";
 import { 
   LayoutDashboard, 
-  Activity, 
-  Network, 
-  BrainCircuit, 
-  Sparkles, 
-  Calendar, 
-  Clock, 
-  Play, 
-  Pause,
-  AlertCircle
+  BarChart3, 
+  ShieldAlert, 
+  ListChecks 
 } from "lucide-react";
 
-import { OverviewPage } from "./components/OverviewPage";
-import { RiskMonitoringPage } from "./components/RiskMonitoringPage";
-import { SupplyChainMapPage } from "./components/SupplyChainMapPage";
-import { AIInsightsPage } from "./components/AIInsightsPage";
-import { RecommendationsPage } from "./components/RecommendationsPage";
+import { ExecutiveOverview } from "./components/ExecutiveOverview";
+import { RiskAnalysis } from "./components/RiskAnalysis";
+import { RiskFactorsResilience } from "./components/RiskFactorsResilience";
+import { Recommendations } from "./components/Recommendations";
+import { fetchControlTowerData } from "./services/api";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "monitoring" | "map" | "insights" | "recommendations"
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "analysis" | "factors" | "recommendations"
   const [selectedDate, setSelectedDate] = useState("2025-08-15");
   const [selectedEntityId, setSelectedEntityId] = useState("SUP001");
-  const [monitoringCategory, setMonitoringCategory] = useState("supplier");
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [allData, setAllData] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [dataPayload, setDataPayload] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 3 Valid Historical & Disruption Scenarios
-  const scenarioOptions = [
-    { label: "Scenario 1: Normal Operations (Apr 15)", value: "2025-04-15" },
-    { label: "Scenario 2: Typhoon & Supply Starvation (Aug 15)", value: "2025-08-15" },
-    { label: "Scenario 3: Retail Stockout Surge (Oct 24)", value: "2025-10-24" }
+  // 3 Valid Historical & Benchmark Observation Dates
+  const dateOptions = [
+    { label: "Normal Operations (15 Apr 2025)", value: "2025-04-15" },
+    { label: "Typhoon & Supply Starvation (15 Aug 2025)", value: "2025-08-15" },
+    { label: "Retail Stockout Peak (24 Oct 2025)", value: "2025-10-24" }
   ];
 
-  // Load integrated data from backend or local fallback cache
-  async function loadControlTowerData() {
-    setLoading(true);
-    try {
-      const res = await fetch("/control_tower_data.json");
-      if (res.ok) {
-        const json = await res.json();
-        setAllData(json);
-      } else {
-        throw new Error("Local json unavailable");
-      }
-    } catch (e) {
-      console.warn("Using inline fallback structure:", e);
-    } finally {
+  useEffect(() => {
+    async function initData() {
+      setLoading(true);
+      const data = await fetchControlTowerData();
+      setDataPayload(data);
       setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    loadControlTowerData();
+    initData();
   }, []);
 
-  // Demo playback loop across the 3 scenarios
-  useEffect(() => {
-    let timer = null;
-    if (isPlaying) {
-      let idx = 0;
-      timer = setInterval(() => {
-        idx = (idx + 1) % scenarioOptions.length;
-        setSelectedDate(scenarioOptions[idx].value);
-      }, 4500);
-    } else {
-      clearInterval(timer);
-    }
-    return () => clearInterval(timer);
-  }, [isPlaying]);
+  const scenarioData = dataPayload?.scenario_data?.[selectedDate] || null;
 
-  const currentScenarioData = allData?.scenario_data?.[selectedDate] || null;
+  function handleNavigateToRiskAnalysis(categoryKey = null, entityId = null) {
+    setActiveTab("analysis");
+    if (categoryKey) setSelectedCategory(categoryKey);
+    if (entityId) setSelectedEntityId(entityId);
+  }
 
-  function handleNavigateTab(tabName, params = {}) {
-    setActiveTab(tabName);
-    if (params.category) setMonitoringCategory(params.category);
-    if (params.entityId) setSelectedEntityId(params.entityId);
+  function handleNavigateToFactors(entityId = null) {
+    setActiveTab("factors");
+    if (entityId) setSelectedEntityId(entityId);
+  }
+
+  function handleNavigateToRecommendations(entityId = null) {
+    setActiveTab("recommendations");
+    if (entityId) setSelectedEntityId(entityId);
   }
 
   const navItems = [
-    { id: "overview", label: "1. Overview", icon: <LayoutDashboard size={16} /> },
-    { id: "monitoring", label: "2. Risk Monitoring", icon: <Activity size={16} /> },
-    { id: "map", label: "3. Supply Chain Map", icon: <Network size={16} /> },
-    { id: "insights", label: "4. AI Insights", icon: <BrainCircuit size={16} /> },
-    { id: "recommendations", label: "5. Recommendations", icon: <Sparkles size={16} /> }
+    { id: "overview", label: "Executive Overview", icon: <LayoutDashboard size={17} /> },
+    { id: "analysis", label: "Risk Analysis", icon: <BarChart3 size={17} /> },
+    { id: "factors", label: "Risk Factors & Resilience", icon: <ShieldAlert size={17} /> },
+    { id: "recommendations", label: "Recommendations", icon: <ListChecks size={17} /> },
   ];
 
   return (
-    <div style={{
-      display: "flex",
-      minHeight: "100vh",
-      backgroundColor: "#0b1329", // Dark Navy
-      color: "#f8fafc",
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-    }}>
-      {/* 1. LEFT SIDEBAR NAVIGATION */}
-      <aside style={{
-        width: "250px",
-        backgroundColor: "#0f172a",
-        borderRight: "1px solid #1e293b",
+    <div
+      style={{
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        flexShrink: 0
-      }}>
+        minHeight: "100vh",
+        backgroundColor: "var(--bg-app)",
+        color: "var(--text-primary)",
+      }}
+    >
+      {/* COMPACT LEFT SIDEBAR */}
+      <aside
+        style={{
+          width: "240px",
+          minWidth: "240px",
+          backgroundColor: "var(--bg-surface)",
+          borderRight: "1px solid var(--border-light)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
         <div>
-          {/* Dashboard Title & Subtitle */}
-          <div style={{ padding: "20px 18px", borderBottom: "1px solid #1e293b" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-              <div style={{
-                backgroundColor: "#0284c7",
-                borderRadius: "6px",
-                width: "28px",
-                height: "28px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#ffffff"
-              }}>
-                <Network size={18} />
-              </div>
-              <h1 style={{ fontSize: "15px", fontWeight: "800", margin: 0, color: "#f8fafc", letterSpacing: "0.2px" }}>
-                Supply Chain Control Tower
-              </h1>
+          {/* Brand header */}
+          <div
+            style={{
+              padding: "20px 18px",
+              borderBottom: "1px solid var(--border-light)",
+            }}
+          >
+            <div style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--accent-teal)" }}>
+              Supply Chain Resilience
             </div>
-            <p style={{ fontSize: "11px", color: "#94a3b8", margin: "4px 0 0 0", lineHeight: "1.4" }}>
-              Monitor risks. Predict disruptions. Make smarter decisions.
-            </p>
+            <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary)", marginTop: "2px" }}>
+              Risk Control Tower
+            </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav style={{ padding: "16px 12px", display: "flex", flexDirection: "column", gap: "6px" }}>
+          {/* Navigation items */}
+          <nav style={{ padding: "12px 10px", display: "flex", flexDirection: "column", gap: "4px" }}>
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
@@ -142,167 +111,135 @@ export default function App() {
                     display: "flex",
                     alignItems: "center",
                     gap: "10px",
-                    width: "100%",
-                    padding: "10px 14px",
-                    borderRadius: "6px",
-                    border: "none",
-                    backgroundColor: isActive ? "#0284c7" : "transparent",
-                    color: isActive ? "#ffffff" : "#94a3b8",
+                    padding: "9px 12px",
+                    borderRadius: "var(--radius-sm)",
                     fontSize: "13px",
-                    fontWeight: isActive ? "700" : "500",
-                    cursor: "pointer",
+                    fontWeight: isActive ? 600 : 500,
+                    color: isActive ? "var(--accent-teal)" : "var(--text-secondary)",
+                    backgroundColor: isActive ? "var(--accent-teal-subtle)" : "transparent",
+                    border: isActive ? "1px solid var(--accent-teal-border)" : "1px solid transparent",
                     textAlign: "left",
-                    transition: "all 0.12s ease"
+                    width: "100%",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.backgroundColor = "var(--bg-subtle)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) e.currentTarget.style.backgroundColor = "transparent";
                   }}
                 >
-                  <span style={{ color: isActive ? "#ffffff" : "#38bdf8" }}>{item.icon}</span>
-                  {item.label}
+                  <span style={{ color: isActive ? "var(--accent-teal)" : "var(--text-muted)" }}>
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
                 </button>
               );
             })}
           </nav>
         </div>
 
-        {/* Sidebar Footer Info */}
-        <div style={{ padding: "16px", borderTop: "1px solid #1e293b", fontSize: "11px", color: "#64748b" }}>
-          <div>Prediction Horizon: <span style={{ color: "#38bdf8", fontWeight: "600" }}>7 Days</span></div>
-          <div style={{ marginTop: "4px" }}>Multi-Target CatBoost + EIF</div>
-          <div style={{ marginTop: "2px" }}>27 Monitored Physical Assets</div>
+        {/* Footer info in sidebar */}
+        <div
+          style={{
+            padding: "16px",
+            borderTop: "1px solid var(--border-light)",
+            fontSize: "11px",
+            color: "var(--text-muted)",
+          }}
+        >
+          <div style={{ fontWeight: 600, color: "var(--text-secondary)" }}>
+            Multi-Tier Smartphone Network
+          </div>
+          <div style={{ marginTop: "2px" }}>
+            27 Entities • 7-Day Lookahead
+          </div>
+          <div style={{ marginTop: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#16a34a" }} />
+            <span style={{ color: "var(--text-secondary)", fontWeight: 500 }}>System Active</span>
+          </div>
         </div>
       </aside>
 
-      {/* 2. MAIN CONTENT AREA */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflowY: "auto" }}>
-        {/* Top Header Bar */}
-        <header style={{
-          backgroundColor: "#0f172a",
-          borderBottom: "1px solid #1e293b",
-          padding: "12px 24px",
+      {/* MAIN CONTENT AREA */}
+      <main
+        style={{
+          flex: 1,
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexShrink: 0
-        }}>
-          <div>
-            <div style={{ fontSize: "13px", fontWeight: "700", color: "#f8fafc" }}>
-              {navItems.find(n => n.id === activeTab)?.label}
-            </div>
-            <div style={{ fontSize: "11px", color: "#94a3b8" }}>
-              Active Scenario: <span style={{ color: "#38bdf8", fontWeight: "600" }}>
-                {scenarioOptions.find(s => s.value === selectedDate)?.label}
-              </span>
-            </div>
+          flexDirection: "column",
+          minWidth: 0,
+          overflowY: "auto",
+        }}
+      >
+        {/* Top bar */}
+        <header
+          style={{
+            height: "54px",
+            padding: "0 28px",
+            backgroundColor: "var(--bg-surface)",
+            borderBottom: "1px solid var(--border-light)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+            Executive Dashboard /{" "}
+            <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>
+              {navItems.find((n) => n.id === activeTab)?.label}
+            </span>
           </div>
-
-          {/* Scenario Selector & Demo Playback */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              backgroundColor: "#1e293b",
-              padding: "4px 10px",
-              borderRadius: "6px",
-              border: "1px solid #334155"
-            }}>
-              <Calendar size={13} color="#94a3b8" />
-              <select
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                style={{
-                  backgroundColor: "transparent",
-                  color: "#38bdf8",
-                  border: "none",
-                  fontSize: "12px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  outline: "none"
-                }}
-              >
-                {scenarioOptions.map(opt => (
-                  <option key={opt.value} value={opt.value} style={{ backgroundColor: "#0f172a", color: "#f8fafc" }}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-                padding: "6px 12px",
-                borderRadius: "6px",
-                border: "1px solid #334155",
-                backgroundColor: isPlaying ? "#0284c7" : "#1e293b",
-                color: "#ffffff",
-                fontSize: "11px",
-                fontWeight: "700",
-                cursor: "pointer"
-              }}
-            >
-              {isPlaying ? <Pause size={12} /> : <Play size={12} />}
-              {isPlaying ? "Pause Demo" : "Play Scenarios"}
-            </button>
+          <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+            Benchmark Dataset: <strong style={{ color: "var(--text-secondary)" }}>DataCo + Open-Meteo</strong>
           </div>
         </header>
 
-        {/* Page Content Body */}
-        <main style={{ padding: "20px 24px", flex: 1 }}>
+        {/* Page Content */}
+        <div style={{ padding: "24px 28px", maxWidth: "1200px", width: "100%", margin: "0 auto" }}>
           {loading ? (
-            <div style={{ textAlign: "center", padding: "60px", color: "#94a3b8" }}>
-              Loading Supply Chain Control Tower...
+            <div style={{ padding: "32px", color: "var(--text-muted)", fontSize: "13px" }}>
+              Loading dashboard parameters...
             </div>
           ) : (
             <>
               {activeTab === "overview" && (
-                <OverviewPage 
-                  data={currentScenarioData}
-                  onSelectEntity={setSelectedEntityId}
-                  onNavigateTab={handleNavigateTab}
+                <ExecutiveOverview
+                  scenarioData={scenarioData}
+                  selectedDate={selectedDate}
+                  onSelectDate={setSelectedDate}
+                  dateOptions={dateOptions}
+                  onNavigateToRiskAnalysis={handleNavigateToRiskAnalysis}
                 />
               )}
 
-              {activeTab === "monitoring" && (
-                <RiskMonitoringPage 
-                  data={currentScenarioData}
-                  initialCategory={monitoringCategory}
-                  onSelectEntity={setSelectedEntityId}
-                  onNavigateTab={handleNavigateTab}
-                />
-              )}
-
-              {activeTab === "map" && (
-                <SupplyChainMapPage 
-                  data={currentScenarioData}
+              {activeTab === "analysis" && (
+                <RiskAnalysis
+                  scenarioData={scenarioData}
+                  selectedCategory={selectedCategory}
                   selectedEntityId={selectedEntityId}
-                  onSelectEntity={setSelectedEntityId}
-                  onNavigateTab={handleNavigateTab}
+                  onNavigateToFactors={handleNavigateToFactors}
+                  onNavigateToRecommendations={handleNavigateToRecommendations}
                 />
               )}
 
-              {activeTab === "insights" && (
-                <AIInsightsPage 
-                  data={currentScenarioData}
+              {activeTab === "factors" && (
+                <RiskFactorsResilience
+                  scenarioData={scenarioData}
                   selectedEntityId={selectedEntityId}
-                  onSelectEntity={setSelectedEntityId}
-                  onNavigateTab={handleNavigateTab}
+                  onNavigateToRecommendations={handleNavigateToRecommendations}
                 />
               )}
 
               {activeTab === "recommendations" && (
-                <RecommendationsPage 
-                  data={currentScenarioData}
-                  onSelectEntity={setSelectedEntityId}
-                  onNavigateTab={handleNavigateTab}
+                <Recommendations
+                  scenarioData={scenarioData}
+                  selectedEntityId={selectedEntityId}
                 />
               )}
             </>
           )}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
