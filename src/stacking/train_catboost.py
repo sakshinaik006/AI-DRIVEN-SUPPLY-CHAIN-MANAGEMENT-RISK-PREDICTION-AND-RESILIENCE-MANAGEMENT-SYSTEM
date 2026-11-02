@@ -1,80 +1,189 @@
-import os
-import pandas as pd
+"""Multi-Target / Multi-Tier CatBoost Risk Training and Inference Pipeline.
+
+Audited and corrected for Stage 3:
+1. Replaces dummy features with genuine processed features across all 4 operational tiers:
+   - Supplier failure -> features_supplier_v1.parquet
+   - Manufacturing delay -> features_manufacturing_v1.parquet
+   - Warehouse stockout -> features_warehouse_v1.parquet
+   - Transport disruption -> features_transport_v1.parquet
+2. Eliminates random label generation: trains strictly on genuine 'label_7d'.
+3. Eliminates in-sample evaluation: fits strictly on split == 'train', validates on split == 'val'.
+4. Calculates genuine PR-AUC, Recall, and F1 on held-out test split (split == 'test').
+5. Eliminates hardcoded metrics [0.85, 0.78, 0.81].
+6. Emits full predictions across all 27 physical network entities to outputs/predictions.csv.
+"""
+from pathlib import Path
+import json
+import joblib
 import numpy as np
+import pandas as pd
 from catboost import CatBoostClassifier
+from sklearn.metrics import precision_recall_curve, auc, f1_score, recall_score
 
-def find_file(filename):
-    for root, dirs, files in os.walk('.'):
-        if 'env' in dirs: dirs.remove('env')
-        if '.git' in dirs: dirs.remove('.git')
-        if filename in files:
-            print(f"Found {filename} at: {os.path.join(root, filename)}")
-            return os.path.join(root, filename)
-    raise FileNotFoundError(f"Missing {filename}!")
+ROOT = Path(__file__).resolve().parents[2]
+PROC = ROOT / "data" / "processed"
+OUT = ROOT / "outputs"
+MODELS_DIR = ROOT / "models"
+OUT.mkdir(parents=True, exist_ok=True)
+MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
-def train_master_model():
-    print("Loading all team handovers...")
-    
-    df_forecast = pd.read_parquet(find_file('forecast_scores.parquet'))
-    df_features = pd.read_parquet(find_file('features_warehouse_v0_dummy.parquet'))
-    df_graph = pd.read_parquet(find_file('graph_scores_v0_dummy.parquet'))
-    df_news = pd.read_parquet(find_file('news_scores.parquet'))
-    df_anomaly = pd.read_parquet(find_file('anomaly_scores.parquet'))
+TIER_CONFIG = {
+    "supplier_failure": {
+        "file": "features_supplier_v1.parquet",
+        "entity_type": "supplier",
+        "features": ["supplier_delay_7d_avg", "rain_7d_sum", "news_tone_14d_trend", "single_source_flag"],
+        "cat_features": ["single_source_flag"],
+    },
+    "manufacturing_delay": {
+        "file": "features_manufacturing_v1.parquet",
+        "entity_type": "plant",
+        "features": ["delivery_delay_7d_avg", "production_ratio_7d_avg", "rain_7d_sum", "supplier_failure_prob_oof"],
+        "cat_features": [],
+    },
+    "warehouse_stockout": {
+        "file": "features_warehouse_v1.parquet",
+        "entity_type": "warehouse",
+        "features": ["demand_7d_avg", "stock_days_cover", "inventory_level", "mfg_delay_prob_oof"],
+        "cat_features": [],
+    },
+    "transport_disruption": {
+        "file": "features_transport_v1.parquet",
+        "entity_type": "route",
+        "features": ["delivery_delay_7d_avg", "rain_7d_sum", "port_news_tone_14d", "distance_km", "shipping_mode"],
+        "cat_features": ["shipping_mode"],
+    },
+}
 
-    print("Standardizing date formats...")
-    if 'date' in df_forecast.columns: df_forecast['date'] = pd.to_datetime(df_forecast['date'])
-    if 'date' in df_features.columns: df_features['date'] = pd.to_datetime(df_features['date'])
-    if 'date' in df_news.columns: df_news['date'] = pd.to_datetime(df_news['date'])
-    if 'date' in df_anomaly.columns: df_anomaly['date'] = pd.to_datetime(df_anomaly['date'])
 
-    print("Merging datasets...")
-    df = df_features.merge(df_forecast, on=['entity_id', 'date'], how='left')
-    df = df.merge(df_graph, on='entity_id', how='left')
-    df = df.merge(df_news, on=['entity_id', 'date'], how='left')
-    df = df.merge(df_anomaly, on=['entity_id', 'date'], how='left')
+def train_and_evaluate_all():
+    all_predictions = []
+    evaluation_records = []
+    models_metadata = {}
 
-    df = df.fillna(0).sort_values('date')
+    print("=" * 60)
+    print("Stage 3: Training CatBoost models on verified operational features")
+    print("=" * 60)
 
-    target_cols = ['risk_demand_surge', 'risk_transport_delay', 'risk_supplier_failure', 'risk_quality_issue']
-    
-    # FIX: Inject a mix of 0s and 1s so CatBoost has multiple classes to learn from
-    for col in target_cols:
-        if col not in df.columns or df[col].nunique() <= 1:
-            df[col] = np.random.randint(0, 2, size=len(df))
-            
-    features = [col for col in df.columns if col not in ['entity_id', 'date'] + target_cols]
+    for risk_type, cfg in TIER_CONFIG.items():
+        data_path = PROC / cfg["file"]
+        df = pd.read_parquet(data_path)
+        print(f"\n[+] Processing {risk_type} from {cfg['file']} ({len(df)} rows, {df['entity_id'].nunique()} entities)...")
 
-    print("Training Multi-Target CatBoost Classifier...")
-    X = df[features].copy()
-    y = df[target_cols]
+        # Temporal split masking
+        train_df = df[df["split"] == "train"].dropna(subset=["label_7d"])
+        val_df = df[df["split"] == "val"].dropna(subset=["label_7d"])
+        test_df = df[df["split"] == "test"].dropna(subset=["label_7d"])
 
-    cat_features = list(X.select_dtypes(include=['object', 'string', 'category']).columns)
-    
-    for col in X.columns:
-        if col not in cat_features and X[col].apply(lambda x: isinstance(x, str)).any():
-            cat_features.append(col)
-            
-    if cat_features:
-        X[cat_features] = X[cat_features].astype(str)
+        X_train = train_df[cfg["features"]].copy()
+        y_train = train_df["label_7d"].astype(int)
 
-    model = CatBoostClassifier(iterations=10, learning_rate=0.05, depth=4, loss_function='MultiLogloss', verbose=0)
-    model.fit(X, y, cat_features=cat_features)
+        X_val = val_df[cfg["features"]].copy()
+        y_val = val_df["label_7d"].astype(int)
 
-    print("Generating predictions...")
-    preds = model.predict_proba(X)
-    
-    out_df = df[['entity_id', 'date']].copy()
-    for i, target in enumerate(target_cols):
-        out_df[f'{target}_prob'] = preds[:, i]
-    
-    os.makedirs('outputs', exist_ok=True)
-    out_df.to_csv('outputs/predictions.csv', index=False)
-    
-    metrics_df = pd.DataFrame({'metric': ['PR-AUC', 'Recall', 'F1'], 'score': [0.85, 0.78, 0.81]})
-    metrics_df.to_csv('outputs/metrics.csv', index=False)
-    
-    print("Success! Final predictions and metrics saved to outputs/")
+        X_test = test_df[cfg["features"]].copy()
+        y_test = test_df["label_7d"].astype(int)
 
-if __name__ == '__main__':
-    train_master_model()
-    
+        # Ensure categorical features are string formatted
+        for cat in cfg["cat_features"]:
+            if cat in X_train.columns:
+                X_train[cat] = X_train[cat].astype(str)
+                X_val[cat] = X_val[cat].astype(str)
+                X_test[cat] = X_test[cat].astype(str)
+
+        # Compute positive class balance weight
+        pos_count = (y_train == 1).sum()
+        neg_count = (y_train == 0).sum()
+        scale_pos_weight = float(neg_count / max(1, pos_count))
+
+        model = CatBoostClassifier(
+            iterations=150,
+            learning_rate=0.04,
+            depth=4,
+            scale_pos_weight=scale_pos_weight,
+            eval_metric="Logloss",
+            random_seed=42,
+            verbose=0,
+        )
+
+        model.fit(
+            X_train,
+            y_train,
+            eval_set=(X_val, y_val),
+            cat_features=cfg["cat_features"] if cfg["cat_features"] else None,
+            early_stopping_rounds=25,
+            verbose=False,
+        )
+
+        # Predict probabilities on full timeline
+        X_full = df[cfg["features"]].copy()
+        for cat in cfg["cat_features"]:
+            if cat in X_full.columns:
+                X_full[cat] = X_full[cat].astype(str)
+
+        full_probs = model.predict_proba(X_full)[:, 1]
+
+        tier_preds = pd.DataFrame({
+            "entity_id": df["entity_id"],
+            "entity_type": cfg["entity_type"],
+            "date": df["date"],
+            "risk_type": risk_type,
+            "probability": np.round(full_probs, 4),
+            "level": np.where(full_probs >= 0.60, "HIGH", np.where(full_probs >= 0.30, "MEDIUM", "LOW")),
+            "split": df["split"],
+        })
+        all_predictions.append(tier_preds)
+
+        # Evaluate strictly on held-out test split
+        if len(y_test) > 0 and y_test.nunique() > 1:
+            test_probs = model.predict_proba(X_test)[:, 1]
+            precision, recall, _ = precision_recall_curve(y_test, test_probs)
+            pr_auc = float(auc(recall, precision))
+            test_preds = (test_probs >= 0.5).astype(int)
+            rec = float(recall_score(y_test, test_preds, zero_division=0))
+            f1 = float(f1_score(y_test, test_preds, zero_division=0))
+        else:
+            pr_auc, rec, f1 = 0.5, 0.0, 0.0
+
+        evaluation_records.append({
+            "risk_type": risk_type,
+            "model": "CatBoost",
+            "test_pr_auc": round(pr_auc, 3),
+            "test_recall": round(rec, 3),
+            "test_f1": round(f1, 3),
+            "test_samples": len(y_test),
+            "test_positives": int((y_test == 1).sum()),
+        })
+
+        # Save model artifact
+        model_file = MODELS_DIR / f"catboost_{risk_type}.cbm"
+        model.save_model(str(model_file))
+        models_metadata[risk_type] = {
+            "model_path": str(model_file),
+            "features": cfg["features"],
+            "cat_features": cfg["cat_features"],
+            "scale_pos_weight": round(scale_pos_weight, 2),
+            "best_iteration": model.get_best_iteration(),
+        }
+        print(f"      Saved {model_file.name} | Test PR-AUC: {pr_auc:.3f}, Recall: {rec:.3f}, F1: {f1:.3f}")
+
+    # Combine full multi-tier predictions
+    full_preds_df = pd.concat(all_predictions, ignore_index=True)
+    out_preds_path = OUT / "predictions.csv"
+    full_preds_df.to_csv(out_preds_path, index=False)
+    print(f"\n[+] Full multi-tier predictions saved to {out_preds_path} ({len(full_preds_df)} rows, {full_preds_df['entity_id'].nunique()} entities)")
+
+    # Save real metrics table
+    metrics_df = pd.DataFrame(evaluation_records)
+    out_metrics_path = OUT / "metrics.csv"
+    metrics_df.to_csv(out_metrics_path, index=False)
+    print(f"[+] Verified held-out evaluation metrics saved to {out_metrics_path}")
+
+    # Save metadata config
+    with open(MODELS_DIR / "catboost_metadata.json", "w") as f:
+        json.dump(models_metadata, f, indent=2)
+
+    return full_preds_df, metrics_df
+
+
+if __name__ == "__main__":
+    train_and_evaluate_all()

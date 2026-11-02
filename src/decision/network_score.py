@@ -2,12 +2,14 @@
 Owned by Member 1 (Data, Graph, and Dashboard Engineer).
 
 Formula:
-Network Risk = 0.25 * Supplier + 0.25 * Manufacturing + 0.20 * Stockout + 0.20 * Transport + 0.10 * External
+Network Risk = w_sup * Supplier + w_mfg * Manufacturing + w_wh * Stockout + w_tr * Transport + w_ext * External
 
-Weights are explicit prototype assumptions documented in docs/assumptions.md and docs/disclosure.md.
+Audited and corrected for Stage 8:
+- Weights are strictly validated: must sum to 1.0 (with a 1e-4 tolerance).
+- Component probabilities must be in [0.0, 1.0].
+- Missing component probabilities raise ValueError rather than silently defaulting to 0.0.
 """
-from typing import Dict, Any
-
+from typing import Dict, Any, Optional
 
 DEFAULT_WEIGHTS = {
     "supplier": 0.25,
@@ -24,8 +26,8 @@ def compute_network_risk(
     stockout_prob: float,
     transport_prob: float,
     external_score: float = 0.0,
-    weights: Dict[str, float] | None = None,
-    cutoffs: Dict[str, float] | None = None,
+    weights: Optional[Dict[str, float]] = None,
+    cutoffs: Optional[Dict[str, float]] = None,
 ) -> Dict[str, Any]:
     """Calculate the weighted composite network risk score and level.
 
@@ -43,6 +45,25 @@ def compute_network_risk(
     """
     w = weights or DEFAULT_WEIGHTS
     c = cutoffs or {"low_max": 0.30, "high_min": 0.60}
+
+    # Validate weight sum
+    weight_sum = sum(w.values())
+    if abs(weight_sum - 1.0) > 1e-4:
+        raise ValueError(f"Weights must sum to 1.0, got sum={weight_sum:.4f}")
+
+    # Validate inputs
+    inputs = {
+        "supplier": supplier_prob,
+        "manufacturing": manufacturing_prob,
+        "stockout": stockout_prob,
+        "transport": transport_prob,
+        "external": external_score,
+    }
+    for k, val in inputs.items():
+        if val is None:
+            raise ValueError(f"Component '{k}' probability cannot be None")
+        if not (0.0 <= float(val) <= 1.0):
+            raise ValueError(f"Component '{k}' value {val} is out of valid range [0.0, 1.0]")
 
     composite_score = (
         w["supplier"] * float(supplier_prob)

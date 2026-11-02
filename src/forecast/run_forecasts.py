@@ -1,48 +1,58 @@
-import os
+"""Execute Demand Forecasting Pipeline.
+
+Audited and corrected for Stage 4:
+1. Replaces simulated Poisson demand with actual historical inventory demand from data/synthetic/daily_inventory.parquet.
+2. Runs HybridDemandForecaster across all warehouses (WH001-WH005) present in the inventory dataset.
+3. Explicitly states implemented models: Exponential Smoothing + CatBoost Residuals.
+4. Leaves incomplete deep models (Chronos-2, PatchTST) disabled or null, rather than fabricating outputs or setting hardcoded zeros.
+"""
+from pathlib import Path
 import pandas as pd
-import numpy as np
-from demand_forecast import HybridDemandForecaster
+from src.forecast.demand_forecast import HybridDemandForecaster
+
+ROOT = Path(__file__).resolve().parents[2]
+SYN = ROOT / "data" / "synthetic"
+PROC = ROOT / "data" / "processed"
+OUT = ROOT / "outputs"
+OUT.mkdir(parents=True, exist_ok=True)
+
 
 def generate_forecasts():
-    print("Loading data...")
-    # Right now, we simulate Member 1's data. 
-    # Once they push the real data, we just change these lines to read their CSV.
-    dates = pd.date_range(start='2025-04-01', end='2025-10-31', freq='D')
-    warehouses = ['WH_001', 'WH_002', 'WH_003']
-    
-    records = []
-    np.random.seed(42)
-    for wh in warehouses:
-        base_demand = np.random.randint(50, 200)
-        for date in dates:
-            # Simulate some weekend seasonality
-            is_weekend = 1 if date.weekday() >= 5 else 0
-            demand = base_demand + (is_weekend * 50) + np.random.randint(-20, 20)
-            records.append({
-                'entity_id': wh,
-                'date': date,
-                'demand': max(0, demand)
-            })
-            
-    df = pd.DataFrame(records)
-    
-    print("Running Hybrid Forecaster (Exponential Smoothing + CatBoost)...")
+    print("Loading actual historical warehouse inventory data...")
+    inv_path = SYN / "daily_inventory.parquet"
+    if not inv_path.exists():
+        raise FileNotFoundError(f"Missing inventory dataset at {inv_path}!")
+
+    df_inv = pd.read_parquet(inv_path)
+    print(f"Loaded {len(df_inv)} daily inventory rows across warehouses: {df_inv['entity_id'].unique().tolist()}")
+
+    # Merge external features (temperature/rain or lag demand if available)
+    feat_path = PROC / "features_warehouse_v1.parquet"
+    if feat_path.exists():
+        df_feat = pd.read_parquet(feat_path)
+        feature_cols = ["demand_7d_avg", "stock_days_cover", "inventory_level"]
+        df_merged = df_inv.merge(df_feat[["entity_id", "date"] + feature_cols], on=["entity_id", "date"], how="left")
+    else:
+        df_merged = df_inv
+        feature_cols = None
+
+    print("Running Hybrid Forecaster (Exponential Smoothing + CatBoost residuals)...")
     forecaster = HybridDemandForecaster(seasonal_periods=7)
-    
-    # Run the math
-    results = forecaster.fit_predict(df, demand_col='demand')
-    
-    # We must also add the Chronos and PatchTST blank columns 
-    # so the API contract is fulfilled until you run Colab later.
-    results['chronos_forecast'] = results['forecast_demand'] 
-    results['patchtst_delay_forecast'] = 0.0
-    
-    # Save the output as a Parquet file
-    os.makedirs('outputs', exist_ok=True)
-    output_path = 'outputs/forecast_scores.parquet'
+    results = forecaster.fit_predict(df_merged, demand_col="demand_qty", feature_cols=feature_cols)
+
+    # Format output dates
+    results["date"] = pd.to_datetime(results["date"]).dt.strftime("%Y-%m-%d")
+
+    # Save to outputs and processed directories
+    output_path = OUT / "forecast_scores.parquet"
     results.to_parquet(output_path, index=False)
-    
-    print(f"Success! Forecasts saved to: {output_path}")
+    results.to_parquet(PROC / "forecast_scores.parquet", index=False)
+
+    print(f"Success! Genuine demand forecasts saved to: {output_path} ({len(results)} rows, {results['entity_id'].nunique()} entities)")
+    print(f"Surge flag distribution:\n{results['demand_surge_flag'].value_counts().to_dict()}")
+
+    return results
+
 
 if __name__ == "__main__":
     generate_forecasts()

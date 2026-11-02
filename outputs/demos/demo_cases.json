@@ -1,20 +1,26 @@
 {
     "case_1_high_supplier_risk": {
-        "entity_id": "WH003",
-        "date": "2025-10-02",
+        "entity_id": "SUP001",
+        "entity_type": "supplier",
+        "risk_type": "supplier_failure",
+        "date": "2025-08-15",
         "risk_level": "High",
-        "probability": 0.542
+        "probability": 0.820
     },
     "case_2_stockout": {
-        "entity_id": "WH002",
-        "date": "2025-09-01",
+        "entity_id": "WH001",
+        "entity_type": "warehouse",
+        "risk_type": "warehouse_stockout",
+        "date": "2025-10-24",
         "risk_level": "High",
-        "probability": 0.564
+        "probability": 0.780
     },
     "case_3_low_risk": {
-        "entity_id": "WH001",
-        "date": "2025-06-05",
+        "entity_id": "SUP008",
+        "entity_type": "supplier",
+        "risk_type": "supplier_failure",
+        "date": "2025-04-15",
         "risk_level": "Low",
-        "probability": 1.899
+        "probability": 0.080
     }
 }

@@ -1,0 +1,55 @@
+{
+  "supplier_failure": {
+    "model_path": "C:\\Users\\Sakshi Naik\\AI-DRIVEN-SUPPLY-CHAIN-MANAGEMENT-RISK-PREDICTION-AND-RESILIENCE-MANAGEMENT-SYSTEM\\models\\catboost_supplier_failure.cbm",
+    "features": [
+      "supplier_delay_7d_avg",
+      "rain_7d_sum",
+      "news_tone_14d_trend",
+      "single_source_flag"
+    ],
+    "cat_features": [
+      "single_source_flag"
+    ],
+    "scale_pos_weight": 26.81,
+    "best_iteration": 0
+  },
+  "manufacturing_delay": {
+    "model_path": "C:\\Users\\Sakshi Naik\\AI-DRIVEN-SUPPLY-CHAIN-MANAGEMENT-RISK-PREDICTION-AND-RESILIENCE-MANAGEMENT-SYSTEM\\models\\catboost_manufacturing_delay.cbm",
+    "features": [
+      "delivery_delay_7d_avg",
+      "production_ratio_7d_avg",
+      "rain_7d_sum",
+      "supplier_failure_prob_oof"
+    ],
+    "cat_features": [],
+    "scale_pos_weight": 26.81,
+    "best_iteration": 71
+  },
+  "warehouse_stockout": {
+    "model_path": "C:\\Users\\Sakshi Naik\\AI-DRIVEN-SUPPLY-CHAIN-MANAGEMENT-RISK-PREDICTION-AND-RESILIENCE-MANAGEMENT-SYSTEM\\models\\catboost_warehouse_stockout.cbm",
+    "features": [
+      "demand_7d_avg",
+      "stock_days_cover",
+      "inventory_level",
+      "mfg_delay_prob_oof"
+    ],
+    "cat_features": [],
+    "scale_pos_weight": 25.07,
+    "best_iteration": 0
+  },
+  "transport_disruption": {
+    "model_path": "C:\\Users\\Sakshi Naik\\AI-DRIVEN-SUPPLY-CHAIN-MANAGEMENT-RISK-PREDICTION-AND-RESILIENCE-MANAGEMENT-SYSTEM\\models\\catboost_transport_disruption.cbm",
+    "features": [
+      "delivery_delay_7d_avg",
+      "rain_7d_sum",
+      "port_news_tone_14d",
+      "distance_km",
+      "shipping_mode"
+    ],
+    "cat_features": [
+      "shipping_mode"
+    ],
+    "scale_pos_weight": 28.8,
+    "best_iteration": 58
+  }
+}

@@ -12,3 +12,4 @@ data/raw/dataco/*.csv
 *.zip
 data/raw/
 data/processed/
+catboost_info/

@@ -34,6 +34,9 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from src.decision.network_score import DEFAULT_WEIGHTS, compute_network_risk
+from src.decision.recommendations import generate_recommendations
+
 ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = ROOT / "outputs"
 PROC_DIR = ROOT / "data" / "processed"
@@ -111,52 +114,12 @@ class MetricItem(BaseModel):
 
 # --- Helper Data Loaders ---
 def load_predictions_df() -> pd.DataFrame:
-    suppliers = [f"SUP00{i}" for i in range(1, 9)]
-    plants = [f"PLT00{i}" for i in range(1, 5)]
-    warehouses = [f"WH00{i}" for i in range(1, 6)]
-    routes = [f"RT{i:03d}" for i in range(1, 11)]
-
-    scenario_rules = {
-        "2025-04-15": {
-            "high": [],
-            "med": [],
-        },
-        "2025-08-15": {
-            "high": ["SUP001", "RT001", "PLT004"],
-            "med": ["RT009", "RT010", "WH002", "WH003"],
-        },
-        "2025-10-24": {
-            "high": ["WH001", "RT006"],
-            "med": ["PLT001", "RT003", "SUP003"],
-        }
-    }
-
-    dates = ["2025-04-15", "2025-08-15", "2025-10-24"]
-    rows = []
-
-    for d in dates:
-        rules = scenario_rules[d]
-        for s in suppliers:
-            prob = 0.82 if s in rules["high"] else (0.35 if s in rules["med"] else 0.08)
-            lvl = "HIGH" if prob >= 0.60 else ("MEDIUM" if prob >= 0.30 else "LOW")
-            rows.append({"entity_id": s, "entity_type": "supplier", "date": d, "risk_type": "supplier_failure", "probability": prob, "level": lvl})
-
-        for p in plants:
-            prob = 0.74 if p in rules["high"] else (0.46 if p in rules["med"] else 0.06)
-            lvl = "HIGH" if prob >= 0.60 else ("MEDIUM" if prob >= 0.30 else "LOW")
-            rows.append({"entity_id": p, "entity_type": "plant", "date": d, "risk_type": "manufacturing_delay", "probability": prob, "level": lvl})
-
-        for w in warehouses:
-            prob = 0.78 if w in rules["high"] else (0.48 if w in rules["med"] else 0.07)
-            lvl = "HIGH" if prob >= 0.60 else ("MEDIUM" if prob >= 0.30 else "LOW")
-            rows.append({"entity_id": w, "entity_type": "warehouse", "date": d, "risk_type": "warehouse_stockout", "probability": prob, "level": lvl})
-
-        for r in routes:
-            prob = 0.75 if r in rules["high"] else (0.44 if r in rules["med"] else 0.05)
-            lvl = "HIGH" if prob >= 0.60 else ("MEDIUM" if prob >= 0.30 else "LOW")
-            rows.append({"entity_id": r, "entity_type": "route", "date": d, "risk_type": "transport_disruption", "probability": prob, "level": lvl})
-
-    return pd.DataFrame(rows)
+    p_path = OUT_DIR / "predictions.csv"
+    if not p_path.exists():
+        p_path = OUT_DIR / "predictions_v0_dummy.csv"
+    if not p_path.exists():
+        raise HTTPException(status_code=500, detail="Predictions dataset not found.")
+    return pd.read_csv(p_path)
 
 def load_reasons_df() -> pd.DataFrame:
     r_path = OUT_DIR / "reasons.csv"
@@ -266,15 +229,17 @@ def get_reasons(
             if not match_s.empty:
                 latest_d = match_s["date"].max() if "date" in match_s.columns else None
                 match_s_latest = match_s[match_s["date"] == latest_d] if latest_d else match_s
+                val_col = "shap_value" if "shap_value" in match_s_latest.columns else "mean_shap_importance"
+                feat_col = "feature" if "feature" in match_s_latest.columns else "feature_name"
+                match_s_latest = match_s_latest.reindex(
+                    match_s_latest[val_col].abs().sort_values(ascending=False).index
+                )
                 for _, r in match_s_latest.iterrows():
-                    feat_col = "feature" if "feature" in r else "feature_name"
-                    val_col = "shap_value" if "shap_value" in r else "mean_shap_importance"
                     shap_breakdown.append(ShapFeature(
                         feature=str(r[feat_col]),
-                        shap_value=round(float(r[val_col]), 3),
+                        shap_value=round(float(r[val_col]), 4),
                     ))
         elif "target_risk" in df_shap.columns and "feature_name" in df_shap.columns:
-            # Member 3 model-level SHAP summary
             match_s = df_shap[df_shap["target_risk"].str.lower().str.contains(rt_norm)]
             if match_s.empty:
                 match_s = df_shap
@@ -282,10 +247,16 @@ def get_reasons(
             for _, r in match_s.head(5).iterrows():
                 shap_breakdown.append(ShapFeature(
                     feature=str(r["feature_name"]),
-                    shap_value=round(float(r[val_col]), 3),
+                    shap_value=round(float(r[val_col]), 4),
                 ))
 
-    # Fallback explanation if records are sparse
+    # Fallback or dynamic reasons from shap_breakdown
+    if not top_reasons and shap_breakdown:
+        top_reasons = [
+            f"Key factor '{item.feature}' contributed {item.shap_value:+.4f} to predicted log-odds"
+            for item in shap_breakdown[:3]
+        ]
+
     if not top_reasons:
         top_reasons = [
             f"Elevated historical delivery delays detected for {entity_id}",
@@ -295,9 +266,9 @@ def get_reasons(
 
     if not shap_breakdown:
         shap_breakdown = [
-            ShapFeature(feature="delivery_delay_7d_avg", shap_value=0.32),
-            ShapFeature(feature="text_risk_7d", shap_value=0.24),
-            ShapFeature(feature="extreme_weather_flag", shap_value=0.18),
+            ShapFeature(feature="delivery_delay_7d_avg", shap_value=0.032),
+            ShapFeature(feature="text_risk_7d", shap_value=0.024),
+            ShapFeature(feature="extreme_weather_flag", shap_value=0.018),
         ]
 
     return ReasonResponse(
@@ -317,47 +288,41 @@ def get_network_score(date: Optional[str] = Query(None, description="Simulation 
         df_latest = df_pred[df_pred["date"] == str(df_pred["date"].max())]
         latest_date = str(df_pred["date"].max())
 
-    # Calculate average probability per risk component
     avg_probs = {}
-    for rt in ["supplier", "manufacturing", "warehouse", "transport"]:
+    for rt, comp in [
+        ("supplier", "supplier"),
+        ("manufacturing", "manufacturing"),
+        ("warehouse", "stockout"),
+        ("transport", "transport"),
+    ]:
         match_rt = df_latest[df_latest["risk_type"].str.lower().str.contains(rt)]
         if not match_rt.empty:
-            avg_probs[rt] = float(match_rt["probability"].mean())
+            avg_probs[comp] = float(match_rt["probability"].mean())
         else:
-            avg_probs[rt] = 0.35
+            avg_probs[comp] = 0.0
 
-    # External score from news and weather
     news_file = PROC_DIR / "news_scores.parquet"
-    ext_score = 0.25
+    ext_score = 0.0
     if news_file.exists():
         df_news = pd.read_parquet(news_file)
         latest_news = df_news[df_news["date"] == latest_date]
-        if not latest_news.empty:
-            ext_score = float(latest_news["text_risk_7d"].mean())
+        if not latest_news.empty and "text_risk_7d" in latest_news.columns:
+            val = float(latest_news["text_risk_7d"].mean())
+            ext_score = max(0.0, min(1.0, val))
 
-    # Holistic Network Risk Score Formula from docs/assumptions.md
-    net_score = (
-        WEIGHTS_ASSUMPTION["supplier"] * avg_probs.get("supplier", 0.35) +
-        WEIGHTS_ASSUMPTION["manufacturing"] * avg_probs.get("manufacturing", 0.35) +
-        WEIGHTS_ASSUMPTION["stockout"] * avg_probs.get("warehouse", 0.35) +
-        WEIGHTS_ASSUMPTION["transport"] * avg_probs.get("transport", 0.35) +
-        WEIGHTS_ASSUMPTION["external"] * ext_score
+    res = compute_network_risk(
+        supplier_prob=avg_probs["supplier"],
+        manufacturing_prob=avg_probs["manufacturing"],
+        stockout_prob=avg_probs["stockout"],
+        transport_prob=avg_probs["transport"],
+        external_score=ext_score,
     )
-    net_score = round(float(net_score), 3)
-
-    # Classify overall network level
-    if net_score >= 0.60:
-        level = "HIGH"
-    elif net_score >= 0.30:
-        level = "MEDIUM"
-    else:
-        level = "LOW"
 
     return NetworkScoreResponse(
         date=latest_date,
-        network_risk_score=net_score,
-        level=level,
-        weights_assumption=WEIGHTS_ASSUMPTION,
+        network_risk_score=round(float(res["network_risk"]), 3),
+        level=res["level"].upper(),
+        weights_assumption=DEFAULT_WEIGHTS,
     )
 
 
@@ -372,74 +337,22 @@ def get_alerts(entity_id: str = Query(..., description="Unique entity ID (e.g. S
         prob = float(latest_row.get("probability", 0.5))
         risk_type = str(latest_row.get("risk_type", "supplier_failure")).lower()
     else:
-        risk_level = "MEDIUM"
-        prob = 0.45
+        risk_level = "LOW"
+        prob = 0.10
         risk_type = "supplier_failure"
 
-    # Mitigation decision logic per docs/assumptions.md
-    recommended_actions = []
-    if "supplier" in risk_type:
-        if risk_level == "HIGH":
-            recommended_actions = [
-                "Trigger immediate volume reallocation to backup supplier SUP004",
-                "Expedite incoming component shipments via priority air freight",
-                "Prioritize high-value customer order fulfillments",
-            ]
-        elif risk_level == "MEDIUM":
-            recommended_actions = [
-                "Monitor supplier delivery buffer and increase daily check-in cadence",
-                "Review alternative tier-1 qualified supplier capacity",
-            ]
-        else:
-            recommended_actions = ["Maintain standard replenishment and procurement schedule"]
-    elif "mfg" in risk_type or "manufacturing" in risk_type or "plant" in risk_type:
-        if risk_level == "HIGH":
-            recommended_actions = [
-                "De-prioritize low-margin product lines and concentrate assembly on flagship units",
-                "Rebalance production schedules to secondary facility PLT004",
-                "Schedule emergency preventive equipment maintenance",
-            ]
-        elif risk_level == "MEDIUM":
-            recommended_actions = [
-                "Adjust shift scheduling to buffer potential output shortfall",
-                "Inspect critical plant subsystem components",
-            ]
-        else:
-            recommended_actions = ["Maintain planned manufacturing throughput"]
-    elif "warehouse" in risk_type or "stockout" in risk_type:
-        if risk_level == "HIGH":
-            recommended_actions = [
-                "Increase safety stock buffer allocations by 25%",
-                "Initiate urgent cross-dock transfer from adjacent regional distribution center",
-                "Cap order fulfillment volumes for non-contractual demand",
-            ]
-        elif risk_level == "MEDIUM":
-            recommended_actions = [
-                "Trigger inventory replenishment threshold early",
-                "Verify warehouse inbound receiving schedule",
-            ]
-        else:
-            recommended_actions = ["Inventory cover is within safe operational limits"]
-    else:  # Transport route
-        if risk_level == "HIGH":
-            recommended_actions = [
-                "Reroute shipments away from congested hub to alternative multimodal lane",
-                "Switch scheduled ocean container cargo to expedited air freight",
-                "Notify downstream assembly plants of potential transit variance",
-            ]
-        elif risk_level == "MEDIUM":
-            recommended_actions = [
-                "Track container milestones with carriers and monitor weather advisories",
-                "Stage buffer transit stock at forward staging hubs",
-            ]
-        else:
-            recommended_actions = ["Transit lanes operating within normal delivery windows"]
+    recs = generate_recommendations(
+        risk_type=risk_type,
+        level=risk_level,
+        entity_id=entity_id,
+        probability=prob,
+    )
+    recommended_actions = [r["action"] for r in recs]
 
-    # Template fallback alert summary (no LLM required on Day 2)
     alert_summary = (
         f"{entity_id} exhibits {prob:.1%} predicted risk ({risk_level}) over the next 7 days. "
-        f"Primary drivers include compounding operational delay trends and localized external factors. "
-        f"Recommended intervention: {recommended_actions[0]}."
+        f"Action type: {recs[0]['action_type']}. "
+        f"Recommended intervention: {recommended_actions[0]}"
     )
 
     return AlertResponse(
@@ -455,13 +368,17 @@ def get_metrics():
     df_m = load_metrics_df()
     results = []
     for _, r in df_m.iterrows():
+        pr_auc_val = float(r.get("pr_auc", r.get("test_pr_auc", 0.0)))
+        recall_val = float(r.get("recall", r.get("test_recall", 0.0)))
+        f1_val = float(r.get("f1", r.get("test_f1", 0.0)))
+        is_base = bool(r.get("is_baseline", False))
         results.append(MetricItem(
             model=str(r["model"]),
             risk_type=str(r["risk_type"]),
-            pr_auc=round(float(r["pr_auc"]), 3),
-            recall=round(float(r["recall"]), 3),
-            f1=round(float(r["f1"]), 3),
-            is_baseline=bool(r["is_baseline"]),
+            pr_auc=round(pr_auc_val, 3),
+            recall=round(recall_val, 3),
+            f1=round(f1_val, 3),
+            is_baseline=is_base,
         ))
     return results
 

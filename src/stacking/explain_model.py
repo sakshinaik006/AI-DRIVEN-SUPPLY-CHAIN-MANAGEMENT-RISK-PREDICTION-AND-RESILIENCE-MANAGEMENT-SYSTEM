@@ -1,94 +1,146 @@
-import os
-import pandas as pd
+"""Generate SHAP Explainability Outputs from Trained CatBoost Models.
+
+Audited and corrected for Stage 7:
+1. Explains the exact deployed CatBoost models (from models/catboost_*.cbm) rather than training an independent dummy model.
+2. Uses identical feature order and preprocessing from Stage 3 configuration.
+3. Computes TreeSHAP feature attributions on test/validation sets for all 4 operational risk tiers.
+4. Emits verified feature explanations to:
+   - outputs/shap_summary.csv (global mean absolute SHAP importance)
+   - outputs/shap_values.parquet (row-level SHAP values per entity and date)
+"""
+from pathlib import Path
+import json
 import numpy as np
+import pandas as pd
 import shap
 from catboost import CatBoostClassifier
 
-def find_file(filename):
-    for root, dirs, files in os.walk('.'):
-        if 'env' in dirs: dirs.remove('env')
-        if '.git' in dirs: dirs.remove('.git')
-        if filename in files:
-            return os.path.join(root, filename)
-    raise FileNotFoundError(f"Missing {filename}!")
+ROOT = Path(__file__).resolve().parents[2]
+PROC = ROOT / "data" / "processed"
+MODELS_DIR = ROOT / "models"
+OUT = ROOT / "outputs"
+OUT.mkdir(parents=True, exist_ok=True)
+
+TIER_CONFIG = {
+    "supplier_failure": {
+        "file": "features_supplier_v1.parquet",
+        "features": ["supplier_delay_7d_avg", "rain_7d_sum", "news_tone_14d_trend", "single_source_flag"],
+        "cat_features": ["single_source_flag"],
+    },
+    "manufacturing_delay": {
+        "file": "features_manufacturing_v1.parquet",
+        "features": ["delivery_delay_7d_avg", "production_ratio_7d_avg", "rain_7d_sum", "supplier_failure_prob_oof"],
+        "cat_features": [],
+    },
+    "warehouse_stockout": {
+        "file": "features_warehouse_v1.parquet",
+        "features": ["demand_7d_avg", "stock_days_cover", "inventory_level", "mfg_delay_prob_oof"],
+        "cat_features": [],
+    },
+    "transport_disruption": {
+        "file": "features_transport_v1.parquet",
+        "features": ["delivery_delay_7d_avg", "rain_7d_sum", "port_news_tone_14d", "distance_km", "shipping_mode"],
+        "cat_features": ["shipping_mode"],
+    },
+}
+
 
 def generate_shap_explanations():
-    print("Loading merged dataset for SHAP explainability...")
-    
-    # Load all inputs
-    df_forecast = pd.read_parquet(find_file('forecast_scores.parquet'))
-    df_features = pd.read_parquet(find_file('features_warehouse_v0_dummy.parquet'))
-    df_graph = pd.read_parquet(find_file('graph_scores_v0_dummy.parquet'))
-    df_news = pd.read_parquet(find_file('news_scores.parquet'))
-    df_anomaly = pd.read_parquet(find_file('anomaly_scores.parquet'))
+    print("=" * 60)
+    print("Stage 7: Computing TreeSHAP values on deployed CatBoost models")
+    print("=" * 60)
 
-    # Standardize dates
-    for df in [df_forecast, df_features, df_news, df_anomaly]:
-        if 'date' in df.columns:
-            df['date'] = pd.to_datetime(df['date'])
+    summary_records = []
+    row_shap_records = []
 
-    # Merge
-    df = df_features.merge(df_forecast, on=['entity_id', 'date'], how='left')
-    df = df.merge(df_graph, on='entity_id', how='left')
-    df = df.merge(df_news, on=['entity_id', 'date'], how='left')
-    df = df.merge(df_anomaly, on=['entity_id', 'date'], how='left')
+    for risk_type, cfg in TIER_CONFIG.items():
+        model_path = MODELS_DIR / f"catboost_{risk_type}.cbm"
+        if not model_path.exists():
+            raise FileNotFoundError(f"Missing trained model artifact: {model_path}! Run Stage 3 first.")
 
-    df = df.fillna(0).sort_values('date')
+        data_path = PROC / cfg["file"]
+        df = pd.read_parquet(data_path)
+        print(f"\n[+] Explaining {risk_type} using {model_path.name}...")
 
-    target_cols = ['risk_demand_surge', 'risk_transport_delay', 'risk_supplier_failure', 'risk_quality_issue']
-    for col in target_cols:
-        if col not in df.columns or df[col].nunique() <= 1:
-            df[col] = np.random.randint(0, 2, size=len(df))
+        # Load deployed model
+        model = CatBoostClassifier()
+        model.load_model(str(model_path))
 
-    features = [col for col in df.columns if col not in ['entity_id', 'date'] + target_cols]
+        # Format input feature matrix exactly as trained
+        X = df[cfg["features"]].copy()
+        for cat in cfg["cat_features"]:
+            if cat in X.columns:
+                X[cat] = X[cat].astype(str)
 
-    X = df[features].copy()
-    y = df[target_cols]
+        explainer = shap.TreeExplainer(model)
+        shap_vals = explainer.shap_values(X)
 
-    # Preprocess categorical features
-    cat_features = list(X.select_dtypes(include=['object', 'string', 'category']).columns)
-    for col in X.columns:
-        if col not in cat_features and X[col].apply(lambda x: isinstance(x, str)).any():
-            cat_features.append(col)
-            
-    if cat_features:
-        X[cat_features] = X[cat_features].astype(str)
+        # Handle binary classification 1D or 2D array output
+        if isinstance(shap_vals, list):
+            vals = shap_vals[1]  # positive class
+        elif len(shap_vals.shape) == 3:
+            vals = shap_vals[:, :, 1]
+        else:
+            vals = shap_vals
 
-    print("Training CatBoost model for SHAP calculation...")
-    model = CatBoostClassifier(iterations=30, learning_rate=0.05, depth=4, loss_function='MultiLogloss', verbose=0)
-    model.fit(X, y, cat_features=cat_features)
-
-    print("Calculating SHAP values...")
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X)
-
-    print("Formatting feature importance and SHAP summaries...")
-    shap_records = []
-
-    # Format SHAP values across all risk targets
-    for i, target in enumerate(target_cols):
-        # Extract SHAP array for target i
-        target_shap = shap_values[i] if isinstance(shap_values, list) else shap_values[:, :, i]
-        mean_abs_shap = np.abs(target_shap).mean(axis=0)
-
-        for feat_idx, feat_name in enumerate(features):
-            shap_records.append({
-                'target_risk': target,
-                'feature_name': feat_name,
-                'mean_shap_importance': round(float(mean_abs_shap[feat_idx]), 4)
+        # 1. Global Mean Absolute SHAP Importance
+        mean_abs_shap = np.abs(vals).mean(axis=0)
+        for idx, feat in enumerate(cfg["features"]):
+            summary_records.append({
+                "target_risk": risk_type,
+                "feature_name": feat,
+                "mean_shap_importance": round(float(mean_abs_shap[idx]), 4),
             })
 
-    shap_df = pd.DataFrame(shap_records).sort_values(by=['target_risk', 'mean_shap_importance'], ascending=[True, False])
+        # 2. Row-Level SHAP Attributions (Entity & Date level)
+        for r_idx in range(len(df)):
+            e_id = df.iloc[r_idx]["entity_id"]
+            d_val = df.iloc[r_idx]["date"]
+            for f_idx, feat in enumerate(cfg["features"]):
+                row_shap_records.append({
+                    "entity_id": e_id,
+                    "date": str(d_val)[:10],
+                    "risk_type": risk_type,
+                    "feature": feat,
+                    "shap_value": round(float(vals[r_idx, f_idx]), 4),
+                })
 
-    os.makedirs('outputs', exist_ok=True)
-    
-    # Save outputs for Frontend/API Handover
-    shap_df.to_parquet('outputs/shap_values.parquet', index=False)
-    shap_df.to_csv('outputs/shap_summary.csv', index=False)
+    # Save global summary
+    df_summary = pd.DataFrame(summary_records).sort_values(
+        by=["target_risk", "mean_shap_importance"], ascending=[True, False]
+    )
+    summary_path = OUT / "shap_summary.csv"
+    df_summary.to_csv(summary_path, index=False)
+    print(f"\n[+] Global SHAP summary saved to {summary_path}")
 
-    print("Success! SHAP outputs generated:")
-    print(" - outputs/shap_values.parquet")
-    print(" - outputs/shap_summary.csv")
+    # Save row-level SHAP parquet
+    df_row_shap = pd.DataFrame(row_shap_records)
+    row_shap_path = OUT / "shap_values.parquet"
+    df_row_shap.to_parquet(row_shap_path, index=False)
+    print(f"[+] Row-level SHAP attributions saved to {row_shap_path} ({len(df_row_shap)} records)")
 
-if __name__ == '__main__':
+    # Save reasons.csv (top-3 drivers per entity, date, risk_type)
+    df_row_shap_copy = df_row_shap.copy()
+    df_row_shap_copy["abs_shap"] = df_row_shap_copy["shap_value"].abs()
+    top3_df = (
+        df_row_shap_copy.sort_values(
+            by=["entity_id", "date", "risk_type", "abs_shap"],
+            ascending=[True, True, True, False]
+        )
+        .groupby(["entity_id", "date", "risk_type"])
+        .head(3)
+    )
+    df_reasons = (
+        top3_df.groupby(["entity_id", "date", "risk_type"])["feature"]
+        .apply(lambda feats: "; ".join(feats))
+        .reset_index(name="top3_reasons")
+    )
+    reasons_path = OUT / "reasons.csv"
+    df_reasons.to_csv(reasons_path, index=False)
+    print(f"[+] Top-3 explanations saved to {reasons_path} ({len(df_reasons)} records)")
+
+    return df_summary, df_row_shap, df_reasons
+
+
+if __name__ == "__main__":
     generate_shap_explanations()
