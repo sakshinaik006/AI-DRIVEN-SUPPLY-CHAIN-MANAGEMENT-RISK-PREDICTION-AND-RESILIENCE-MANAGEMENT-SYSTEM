@@ -1,0 +1,5 @@
+model,risk_type,pr_auc,recall,f1,is_baseline
+CatBoost Multi-Tier,supplier_failure,0.03,0.0,0.0,False
+CatBoost Multi-Tier,manufacturing_delay,0.48,1.0,0.538,False
+CatBoost Multi-Tier,warehouse_stockout,0.049,0.286,0.073,False
+CatBoost Multi-Tier,transport_disruption,0.042,0.0,0.0,False

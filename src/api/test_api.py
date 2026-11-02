@@ -79,6 +79,38 @@ def test_api_endpoints():
             assert k in m, f"Missing key {k} in metric item"
     print(f"    PASS: /api/metrics returned {len(metric_data)} comparison rows.")
 
+    print("--> Testing GET /api/forecast ...")
+    r = client.get("/api/forecast")
+    assert r.status_code == 200, f"Expected 200, got {r.status_code}"
+    forecast_data = r.json()
+    assert len(forecast_data) > 0, "Empty forecast response"
+    for k in ("entity_id", "date", "forecast_demand", "demand_surge_flag"):
+        assert k in forecast_data[0], f"Missing key {k} in forecast item"
+    print(f"    PASS: /api/forecast returned {len(forecast_data)} predictions.")
+
+    print("--> Testing GET /api/anomalies ...")
+    r = client.get("/api/anomalies")
+    assert r.status_code == 200, f"Expected 200, got {r.status_code}"
+    anom_data = r.json()
+    assert len(anom_data) > 0, "Empty anomaly response"
+    for k in ("entity_id", "date", "risk_type", "anomaly_score", "anomaly_flag"):
+        assert k in anom_data[0], f"Missing key {k} in anomaly item"
+    print(f"    PASS: /api/anomalies returned {len(anom_data)} anomaly records.")
+
+    print("--> Testing GET /api/demos ...")
+    r = client.get("/api/demos")
+    assert r.status_code == 200, f"Expected 200, got {r.status_code}"
+    demo_dict = r.json()
+    assert "case_1_high_supplier_risk" in demo_dict
+    assert "case_2_stockout" in demo_dict
+    assert "case_3_low_risk" in demo_dict
+    print(f"    PASS: /api/demos returned verified demo cases dictionary.")
+
+    print("--> Testing 404 on non-existent entity for /api/alerts ...")
+    r = client.get("/api/alerts?entity_id=NON_EXISTENT_ENTITY")
+    assert r.status_code == 404, f"Expected 404, got {r.status_code}"
+    print("    PASS: /api/alerts correctly returns 404 for unknown entity.")
+
     print("--> Testing CORS Headers for http://localhost:5173 ...")
     cors_resp = client.options(
         "/api/risks",

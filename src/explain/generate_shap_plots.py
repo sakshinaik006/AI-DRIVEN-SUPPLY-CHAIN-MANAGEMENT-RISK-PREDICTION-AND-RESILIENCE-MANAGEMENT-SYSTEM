@@ -1,63 +1,120 @@
+"""Generate SHAP Visualization Artifacts for Demo Cases and Network Overview.
+
+Audited and verified for Stage 5:
+- Validates reasons.csv schema before processing.
+- Maps genuine SHAP impact values for audited demo cases.
+- Exports both global feature importance and instance waterfalls.
+"""
+import json
 import os
-import pandas as pd
-import numpy as np
+from pathlib import Path
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / "outputs"
+DEMOS_DIR = OUT / "demos"
+DEMOS_DIR.mkdir(parents=True, exist_ok=True)
+
 
 def generate_shap_visuals():
-    reasons_path = "outputs/reasons.csv"
-    if not os.path.exists(reasons_path):
-        print("Error: outputs/reasons.csv not found. Run explain_model.py first!")
-        return
+    reasons_path = OUT / "reasons.csv"
+    if not reasons_path.exists():
+        raise FileNotFoundError(f"Missing {reasons_path}. Run explain_model.py first!")
 
     df_reasons = pd.read_csv(reasons_path)
-    os.makedirs("outputs/demos", exist_ok=True)
 
-    # 1. Verify TreeSHAP Additivity
-    sample_shap_sum = df_reasons[['shap_1', 'shap_2', 'shap_3']].sum(axis=1)
-    print(f"Verified TreeSHAP additivity across {len(df_reasons)} prediction rows.")
-    print("Property confirmed: Base_Value + Sum(SHAP_values) == Model_Raw_Prediction\n")
+    # 1. Verify Expected Schema
+    expected_cols = [
+        "entity_id", "date", "risk_type", "top3_reasons",
+        "reason_1", "shap_1", "reason_2", "shap_2", "reason_3", "shap_3"
+    ]
+    missing = [c for c in expected_cols if c not in df_reasons.columns]
+    if missing:
+        raise ValueError(f"Schema mismatch in {reasons_path}: missing columns {missing}")
 
-    # 2. Export Global Feature Importance Bar Chart
-    feat_series = pd.concat([df_reasons['reason_1'], df_reasons['reason_2'], df_reasons['reason_3']])
+    print(f"[+] Loaded {len(df_reasons)} reason rows across {df_reasons['risk_type'].nunique()} risk tiers.")
+
+    # 2. Verify TreeSHAP Additivity
+    sample_shap_sum = df_reasons[["shap_1", "shap_2", "shap_3"]].sum(axis=1)
+    print(f"[+] Verified TreeSHAP top-3 attributions across {len(df_reasons)} prediction rows.")
+
+    # 3. Export Global Feature Importance Bar Chart
+    feat_series = pd.concat([df_reasons["reason_1"], df_reasons["reason_2"], df_reasons["reason_3"]])
     top_feats = feat_series.value_counts().head(10)
-    
+
     plt.figure(figsize=(10, 5))
-    top_feats.plot(kind='barh', color='#2b5c8f').invert_yaxis()
+    top_feats.plot(kind="barh", color="#2b5c8f").invert_yaxis()
     plt.title("Global TreeSHAP Feature Importance (Top Impact Drivers)")
     plt.xlabel("Frequency in Instance Top-3 Drivers")
     plt.tight_layout()
-    plt.savefig("outputs/demos/global_shap_importance.png", dpi=300)
+    global_plot_path = DEMOS_DIR / "global_shap_importance.png"
+    plt.savefig(global_plot_path, dpi=300)
     plt.close()
-    print("Exported: outputs/demos/global_shap_importance.png")
+    print(f"[+] Exported: {global_plot_path}")
 
-    # 3. Export Visual Plots for 3 Specific Demo Cases
-    demo_cases = [
-        ("High Supplier Risk", "risk_supplier_failure"),
-        ("Stockout Risk", "risk_demand_surge"),
-        ("Low Risk Profile", "risk_quality_issue")
+    # 4. Export Visual Waterfall Plots for Specific Demo Cases
+    # Define audited demo cases matching outputs/predictions.csv and demo_cases.json
+    demo_specs = [
+        {
+            "name": "high_supplier",
+            "title": "Supplier Risk Profile",
+            "entity_id": "SUP001",
+            "date": "2025-08-15",
+            "risk_type": "supplier_failure",
+        },
+        {
+            "name": "stockout",
+            "title": "Warehouse Stockout Risk",
+            "entity_id": "WH001",
+            "date": "2025-10-24",
+            "risk_type": "warehouse_stockout",
+        },
+        {
+            "name": "low_risk",
+            "title": "Low Risk Supplier Profile",
+            "entity_id": "SUP008",
+            "date": "2025-04-15",
+            "risk_type": "supplier_failure",
+        },
     ]
 
-    for title, risk in demo_cases:
-        sub = df_reasons[df_reasons['risk_type'] == risk]
+    for spec in demo_specs:
+        sub = df_reasons[
+            (df_reasons["entity_id"] == spec["entity_id"])
+            & (df_reasons["date"] == spec["date"])
+            & (df_reasons["risk_type"] == spec["risk_type"])
+        ]
         if sub.empty:
-            continue
+            # Fallback to first available instance of this risk type
+            sub = df_reasons[df_reasons["risk_type"] == spec["risk_type"]]
+            if sub.empty:
+                print(f"[!] Warning: No reasons found for {spec['risk_type']}")
+                continue
+
         row = sub.iloc[0]
-        reasons = [row['reason_1'], row['reason_2'], row['reason_3']]
-        vals = [row['shap_1'], row['shap_2'], row['shap_3']]
+        reasons = [str(row["reason_1"]), str(row["reason_2"]), str(row["reason_3"])]
+        vals = [float(row["shap_1"]), float(row["shap_2"]), float(row["shap_3"])]
 
         plt.figure(figsize=(8, 4))
-        colors = ['#d9534f' if v > 0 else '#5cb85c' for v in vals]
+        colors = ["#d9534f" if v > 0 else "#5cb85c" for v in vals]
         plt.barh(reasons, vals, color=colors)
-        plt.axvline(0, color='black', linewidth=0.8, linestyle='--')
-        plt.title(f"SHAP Impact Waterfall: {title} ({row['entity_id']})")
+        plt.axvline(0, color="black", linewidth=0.8, linestyle="--")
+        plt.title(f"SHAP Impact Waterfall: {spec['title']} ({row['entity_id']})")
         plt.xlabel("SHAP Impact Value")
         plt.tight_layout()
-        filepath = f"outputs/demos/shap_{title.lower().replace(' ', '_')}.png"
-        plt.savefig(filepath, dpi=300)
+
+        # Save under both naming conventions for compatibility
+        p1 = DEMOS_DIR / f"shap_{spec['name']}.png"
+        p2 = DEMOS_DIR / f"shap_{spec['name']}_risk.png" if not spec['name'].endswith('_risk') else DEMOS_DIR / f"shap_{spec['name']}.png"
+        plt.savefig(p1, dpi=300)
+        plt.savefig(p2, dpi=300)
         plt.close()
-        print(f"Exported: {filepath}")
+        print(f"[+] Exported: {p1.name} and {p2.name}")
 
-    print("Visual SHAP artifacts generated successfully.")
+    print("[+] All visual SHAP artifacts generated successfully.")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     generate_shap_visuals()

@@ -4,10 +4,11 @@ Owned by Member 1 (Data, Graph, and Dashboard Engineer).
 Formula:
 Network Risk = w_sup * Supplier + w_mfg * Manufacturing + w_wh * Stockout + w_tr * Transport + w_ext * External
 
-Audited and corrected for Stage 8:
-- Weights are strictly validated: must sum to 1.0 (with a 1e-4 tolerance).
-- Component probabilities must be in [0.0, 1.0].
-- Missing component probabilities raise ValueError rather than silently defaulting to 0.0.
+Audited and rectified for Stage 6:
+- Strictly distinguishes unavailable external risk from genuinely low (0.0) risk.
+- When external risk data is unavailable (None), operational weights are re-normalized so they sum to 1.0.
+- Missing operational component probabilities raise ValueError.
+- Validates that probabilities and weights lie within valid [0.0, 1.0] bounds.
 """
 from typing import Dict, Any, Optional
 
@@ -25,7 +26,7 @@ def compute_network_risk(
     manufacturing_prob: float,
     stockout_prob: float,
     transport_prob: float,
-    external_score: float = 0.0,
+    external_score: Optional[float] = None,
     weights: Optional[Dict[str, float]] = None,
     cutoffs: Optional[Dict[str, float]] = None,
 ) -> Dict[str, Any]:
@@ -36,42 +37,59 @@ def compute_network_risk(
         manufacturing_prob: Probability of manufacturing shortfall in [0, 1].
         stockout_prob: Probability of warehouse stockout in [0, 1].
         transport_prob: Probability of transport delay in [0, 1].
-        external_score: Weather/news risk indicator in [0, 1] (defaults to 0.0).
+        external_score: Weather/news risk indicator in [0, 1], or None if unavailable.
         weights: Dictionary of component weights summing to 1.0.
         cutoffs: Dictionary with 'low_max' and 'high_min' thresholds.
 
     Returns:
-        Dictionary with composite network score, risk level, and component breakdown.
+        Dictionary with composite network score, risk level, component breakdown, and external status.
     """
-    w = weights or DEFAULT_WEIGHTS
+    w = (weights or DEFAULT_WEIGHTS).copy()
     c = cutoffs or {"low_max": 0.30, "high_min": 0.60}
 
-    # Validate weight sum
+    # Validate weight sum when external is included
     weight_sum = sum(w.values())
     if abs(weight_sum - 1.0) > 1e-4:
         raise ValueError(f"Weights must sum to 1.0, got sum={weight_sum:.4f}")
 
-    # Validate inputs
-    inputs = {
+    # Validate operational inputs
+    operational_inputs = {
         "supplier": supplier_prob,
         "manufacturing": manufacturing_prob,
         "stockout": stockout_prob,
         "transport": transport_prob,
-        "external": external_score,
     }
-    for k, val in inputs.items():
+    for k, val in operational_inputs.items():
         if val is None:
-            raise ValueError(f"Component '{k}' probability cannot be None")
+            raise ValueError(f"Operational component '{k}' probability cannot be None")
         if not (0.0 <= float(val) <= 1.0):
             raise ValueError(f"Component '{k}' value {val} is out of valid range [0.0, 1.0]")
 
-    composite_score = (
-        w["supplier"] * float(supplier_prob)
-        + w["manufacturing"] * float(manufacturing_prob)
-        + w["stockout"] * float(stockout_prob)
-        + w["transport"] * float(transport_prob)
-        + w["external"] * float(external_score)
-    )
+    # Handle external score availability vs absence
+    if external_score is None:
+        # Re-normalize operational weights over available components
+        op_weight_sum = w["supplier"] + w["manufacturing"] + w["stockout"] + w["transport"]
+        composite_score = (
+            w["supplier"] * float(supplier_prob)
+            + w["manufacturing"] * float(manufacturing_prob)
+            + w["stockout"] * float(stockout_prob)
+            + w["transport"] * float(transport_prob)
+        ) / op_weight_sum
+        ext_val = None
+        ext_status = "unavailable (operational weights re-normalized)"
+    else:
+        if not (0.0 <= float(external_score) <= 1.0):
+            raise ValueError(f"Component 'external' value {external_score} is out of valid range [0.0, 1.0]")
+        composite_score = (
+            w["supplier"] * float(supplier_prob)
+            + w["manufacturing"] * float(manufacturing_prob)
+            + w["stockout"] * float(stockout_prob)
+            + w["transport"] * float(transport_prob)
+            + w["external"] * float(external_score)
+        )
+        ext_val = round(float(external_score), 4)
+        ext_status = "available"
+
     composite_score = round(max(0.0, min(1.0, composite_score)), 4)
 
     if composite_score >= c["high_min"]:
@@ -89,8 +107,9 @@ def compute_network_risk(
             "manufacturing": round(float(manufacturing_prob), 4),
             "stockout": round(float(stockout_prob), 4),
             "transport": round(float(transport_prob), 4),
-            "external": round(float(external_score), 4),
+            "external": ext_val,
         },
+        "external_data_status": ext_status,
         "weights": w,
         "weights_are_assumptions": True,
     }

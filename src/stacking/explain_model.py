@@ -1,12 +1,12 @@
 """Generate SHAP Explainability Outputs from Trained CatBoost Models.
 
-Audited and corrected for Stage 7:
-1. Explains the exact deployed CatBoost models (from models/catboost_*.cbm) rather than training an independent dummy model.
-2. Uses identical feature order and preprocessing from Stage 3 configuration.
-3. Computes TreeSHAP feature attributions on test/validation sets for all 4 operational risk tiers.
-4. Emits verified feature explanations to:
+Audited and corrected for Stage 5:
+1. Explains the exact deployed CatBoost models (from models/catboost_*.cbm) using identical training features.
+2. Computes TreeSHAP feature attributions on all 4 operational risk tiers.
+3. Emits verified feature explanations to:
    - outputs/shap_summary.csv (global mean absolute SHAP importance)
    - outputs/shap_values.parquet (row-level SHAP values per entity and date)
+   - outputs/reasons.csv (schema-aligned with reason_1/shap_1, reason_2/shap_2, reason_3/shap_3, and top3_reasons)
 """
 from pathlib import Path
 import json
@@ -47,11 +47,12 @@ TIER_CONFIG = {
 
 def generate_shap_explanations():
     print("=" * 60)
-    print("Stage 7: Computing TreeSHAP values on deployed CatBoost models")
+    print("Stage 5: Computing TreeSHAP values on deployed CatBoost models")
     print("=" * 60)
 
     summary_records = []
     row_shap_records = []
+    reasons_records = []
 
     for risk_type, cfg in TIER_CONFIG.items():
         model_path = MODELS_DIR / f"catboost_{risk_type}.cbm"
@@ -75,9 +76,8 @@ def generate_shap_explanations():
         explainer = shap.TreeExplainer(model)
         shap_vals = explainer.shap_values(X)
 
-        # Handle binary classification 1D or 2D array output
         if isinstance(shap_vals, list):
-            vals = shap_vals[1]  # positive class
+            vals = shap_vals[1]
         elif len(shap_vals.shape) == 3:
             vals = shap_vals[:, :, 1]
         else:
@@ -92,18 +92,45 @@ def generate_shap_explanations():
                 "mean_shap_importance": round(float(mean_abs_shap[idx]), 4),
             })
 
-        # 2. Row-Level SHAP Attributions (Entity & Date level)
+        # 2. Row-Level SHAP Attributions & Instance Top-3 Drivers
         for r_idx in range(len(df)):
             e_id = df.iloc[r_idx]["entity_id"]
-            d_val = df.iloc[r_idx]["date"]
+            d_val = str(df.iloc[r_idx]["date"])[:10]
+            instance_shap = []
+
             for f_idx, feat in enumerate(cfg["features"]):
+                sv = round(float(vals[r_idx, f_idx]), 4)
                 row_shap_records.append({
                     "entity_id": e_id,
-                    "date": str(d_val)[:10],
+                    "date": d_val,
                     "risk_type": risk_type,
                     "feature": feat,
-                    "shap_value": round(float(vals[r_idx, f_idx]), 4),
+                    "shap_value": sv,
                 })
+                instance_shap.append((feat, sv))
+
+            # Sort by absolute SHAP impact descending
+            instance_shap_sorted = sorted(instance_shap, key=lambda x: abs(x[1]), reverse=True)
+            top3 = instance_shap_sorted[:3]
+
+            r1, s1 = top3[0] if len(top3) > 0 else ("none", 0.0)
+            r2, s2 = top3[1] if len(top3) > 1 else ("none", 0.0)
+            r3, s3 = top3[2] if len(top3) > 2 else ("none", 0.0)
+
+            top3_str = "; ".join([item[0] for item in top3])
+
+            reasons_records.append({
+                "entity_id": e_id,
+                "date": d_val,
+                "risk_type": risk_type,
+                "top3_reasons": top3_str,
+                "reason_1": r1,
+                "shap_1": s1,
+                "reason_2": r2,
+                "shap_2": s2,
+                "reason_3": r3,
+                "shap_3": s3,
+            })
 
     # Save global summary
     df_summary = pd.DataFrame(summary_records).sort_values(
@@ -119,25 +146,11 @@ def generate_shap_explanations():
     df_row_shap.to_parquet(row_shap_path, index=False)
     print(f"[+] Row-level SHAP attributions saved to {row_shap_path} ({len(df_row_shap)} records)")
 
-    # Save reasons.csv (top-3 drivers per entity, date, risk_type)
-    df_row_shap_copy = df_row_shap.copy()
-    df_row_shap_copy["abs_shap"] = df_row_shap_copy["shap_value"].abs()
-    top3_df = (
-        df_row_shap_copy.sort_values(
-            by=["entity_id", "date", "risk_type", "abs_shap"],
-            ascending=[True, True, True, False]
-        )
-        .groupby(["entity_id", "date", "risk_type"])
-        .head(3)
-    )
-    df_reasons = (
-        top3_df.groupby(["entity_id", "date", "risk_type"])["feature"]
-        .apply(lambda feats: "; ".join(feats))
-        .reset_index(name="top3_reasons")
-    )
+    # Save reasons.csv (with schema matching generate_shap_plots.py and API contracts)
+    df_reasons = pd.DataFrame(reasons_records)
     reasons_path = OUT / "reasons.csv"
     df_reasons.to_csv(reasons_path, index=False)
-    print(f"[+] Top-3 explanations saved to {reasons_path} ({len(df_reasons)} records)")
+    print(f"[+] Top-3 explanations with reason_1..3 and shap_1..3 saved to {reasons_path} ({len(df_reasons)} records)")
 
     return df_summary, df_row_shap, df_reasons
 

@@ -1,0 +1,6 @@
+entity_id,model,test_mae,test_rmse,test_mape_pct,test_mean_actual_demand,test_samples
+WH001,Hybrid ETS + CatBoost Residual,192.96,412.27,14.42,1084.3,31
+WH002,Hybrid ETS + CatBoost Residual,168.67,213.05,15.9,1032.6,31
+WH003,Hybrid ETS + CatBoost Residual,124.85,151.7,12.7,1012.1,31
+WH004,Hybrid ETS + CatBoost Residual,179.54,240.46,19.01,983.2,31
+WH005,Hybrid ETS + CatBoost Residual,211.22,360.06,26.3,965.8,31

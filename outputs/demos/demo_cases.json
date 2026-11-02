@@ -4,23 +4,39 @@
         "entity_type": "supplier",
         "risk_type": "supplier_failure",
         "date": "2025-08-15",
-        "risk_level": "High",
-        "probability": 0.820
+        "risk_level": "LOW",
+        "probability": 0.1696
     },
     "case_2_stockout": {
         "entity_id": "WH001",
         "entity_type": "warehouse",
         "risk_type": "warehouse_stockout",
         "date": "2025-10-24",
-        "risk_level": "High",
-        "probability": 0.780
+        "risk_level": "LOW",
+        "probability": 0.1417
     },
     "case_3_low_risk": {
         "entity_id": "SUP008",
         "entity_type": "supplier",
         "risk_type": "supplier_failure",
         "date": "2025-04-15",
-        "risk_level": "Low",
-        "probability": 0.080
+        "risk_level": "LOW",
+        "probability": 0.0633
+    },
+    "case_peak_supplier_risk": {
+        "entity_id": "SUP003",
+        "entity_type": "supplier",
+        "risk_type": "supplier_failure",
+        "date": "2025-08-01",
+        "risk_level": "MEDIUM",
+        "probability": 0.5813
+    },
+    "case_peak_warehouse_stockout": {
+        "entity_id": "WH004",
+        "entity_type": "warehouse",
+        "risk_type": "warehouse_stockout",
+        "date": "2025-04-08",
+        "risk_level": "MEDIUM",
+        "probability": 0.5521
     }
 }

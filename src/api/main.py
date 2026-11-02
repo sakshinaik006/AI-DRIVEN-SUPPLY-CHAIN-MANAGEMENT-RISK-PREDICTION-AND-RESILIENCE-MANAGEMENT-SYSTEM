@@ -1,14 +1,22 @@
 """FastAPI Backend Server for Supply Chain Risk Prediction & Resilience Platform.
 
-Implements all endpoints defined in docs/api_contract.md:
-  - GET /api/risks
-  - GET /api/reasons
-  - GET /api/network-score
-  - GET /api/alerts
-  - GET /api/metrics
-
-Configured with CORS enabled for http://localhost:5173 (React Vite dev server).
+Audited and rectified for Stage 6:
+- Implements all contract endpoints defined in docs/api_contract.md:
+    GET /api/risks
+    GET /api/reasons
+    GET /api/network-score
+    GET /api/alerts
+    GET /api/metrics
+    GET /api/forecast
+    GET /api/anomalies
+    GET /api/demos (dedicated endpoint for audited demo scenarios)
+- Completely removes silent fallback to dummy files (*_v0_dummy.*).
+- Produces explicit HTTP 500/404 errors when expected production artifacts are absent.
+- Accurately distinguishes unavailable external risk from genuinely low risk in /api/network-score.
+- Re-normalizes operational weights when external data is unavailable.
+- CORS enabled for frontend development servers.
 """
+import json
 import os
 import sys
 from pathlib import Path
@@ -28,8 +36,8 @@ try:
 except Exception:
     pass
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -41,11 +49,12 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = ROOT / "outputs"
 PROC_DIR = ROOT / "data" / "processed"
 SYN_DIR = ROOT / "data" / "synthetic"
+DEMOS_DIR = OUT_DIR / "demos"
 
 app = FastAPI(
     title="AI-Driven Supply Chain Risk Prediction API",
     description="7-day ahead risk prediction, TreeSHAP explanations, network risk score, and mitigation alerts",
-    version="0.2.0",
+    version="0.3.0",
 )
 
 # Enable CORS for frontend Vite dev server
@@ -63,14 +72,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Network risk weighting assumptions from docs/assumptions.md
-WEIGHTS_ASSUMPTION = {
-    "supplier": 0.25,
-    "manufacturing": 0.25,
-    "stockout": 0.20,
-    "transport": 0.20,
-    "external": 0.10,
-}
 
 # --- Pydantic Data Models ---
 class RiskItem(BaseModel):
@@ -81,9 +82,11 @@ class RiskItem(BaseModel):
     probability: float
     level: str
 
+
 class ShapFeature(BaseModel):
     feature: str
     shap_value: float
+
 
 class ReasonResponse(BaseModel):
     entity_id: str
@@ -91,17 +94,22 @@ class ReasonResponse(BaseModel):
     top3_reasons: List[str]
     shap_breakdown: List[ShapFeature]
 
+
 class NetworkScoreResponse(BaseModel):
     date: str
     network_risk_score: float
     level: str
     weights_assumption: Dict[str, float]
+    external_data_status: Optional[str] = "available"
+    components: Optional[Dict[str, Optional[float]]] = None
+
 
 class AlertResponse(BaseModel):
     entity_id: str
     risk_level: str
     recommended_actions: List[str]
     alert_summary: str
+
 
 class MetricItem(BaseModel):
     model: str
@@ -112,39 +120,44 @@ class MetricItem(BaseModel):
     is_baseline: bool
 
 
-# --- Helper Data Loaders ---
+# --- Helper Data Loaders (Strict, No Silent Fallbacks) ---
 def load_predictions_df() -> pd.DataFrame:
     p_path = OUT_DIR / "predictions.csv"
     if not p_path.exists():
-        p_path = OUT_DIR / "predictions_v0_dummy.csv"
-    if not p_path.exists():
-        raise HTTPException(status_code=500, detail="Predictions dataset not found.")
+        raise HTTPException(
+            status_code=500,
+            detail="Production predictions artifact (outputs/predictions.csv) not found. Run Stage 3 CatBoost training first.",
+        )
     return pd.read_csv(p_path)
+
 
 def load_reasons_df() -> pd.DataFrame:
     r_path = OUT_DIR / "reasons.csv"
     if not r_path.exists():
-        r_path = OUT_DIR / "reasons_v0_dummy.csv"
-    if not r_path.exists():
-        return pd.DataFrame()
+        raise HTTPException(
+            status_code=500,
+            detail="Production reasons artifact (outputs/reasons.csv) not found. Run Stage 5 SHAP pipeline first.",
+        )
     return pd.read_csv(r_path)
 
 
 def load_shap_df() -> pd.DataFrame:
     s_path = OUT_DIR / "shap_values.parquet"
     if not s_path.exists():
-        s_path = OUT_DIR / "shap_values_v0_dummy.parquet"
-    if not s_path.exists():
-        return pd.DataFrame()
+        raise HTTPException(
+            status_code=500,
+            detail="Production SHAP values artifact (outputs/shap_values.parquet) not found. Run Stage 5 SHAP pipeline first.",
+        )
     return pd.read_parquet(s_path)
 
 
 def load_metrics_df() -> pd.DataFrame:
     m_path = OUT_DIR / "metrics.csv"
     if not m_path.exists():
-        m_path = OUT_DIR / "metrics_v0_dummy.csv"
-    if not m_path.exists():
-        raise HTTPException(status_code=500, detail="Metrics dataset not found.")
+        raise HTTPException(
+            status_code=500,
+            detail="Production metrics artifact (outputs/metrics.csv) not found. Run evaluation pipeline first.",
+        )
     return pd.read_csv(m_path)
 
 
@@ -155,13 +168,16 @@ def root():
     return {
         "status": "online",
         "service": "Supply Chain Risk Prediction API",
-        "version": "0.2.0 (Day 2)",
+        "version": "0.3.0 (Audited & Rectified)",
         "endpoints": [
             "/api/risks",
             "/api/reasons",
             "/api/network-score",
             "/api/alerts",
             "/api/metrics",
+            "/api/forecast",
+            "/api/anomalies",
+            "/api/demos",
             "/docs",
         ],
     }
@@ -191,7 +207,7 @@ def get_risks(
             entity_type=str(row.get("entity_type", "entity")),
             date=str(row["date"]),
             risk_type=str(row["risk_type"]),
-            probability=round(float(row["probability"]), 3),
+            probability=round(float(row["probability"]), 4),
             level=str(row["level"]).upper(),
         ))
     return results
@@ -210,7 +226,7 @@ def get_reasons(
     match_r = df_reasons[
         (df_reasons["entity_id"] == entity_id) &
         (df_reasons["risk_type"].str.lower().str.contains(rt_norm))
-    ] if not df_reasons.empty else pd.DataFrame()
+    ]
 
     top_reasons = []
     if not match_r.empty:
@@ -220,37 +236,26 @@ def get_reasons(
 
     # Extract SHAP breakdown
     shap_breakdown = []
-    if not df_shap.empty:
-        if "entity_id" in df_shap.columns and "risk_type" in df_shap.columns:
-            match_s = df_shap[
-                (df_shap["entity_id"] == entity_id) &
-                (df_shap["risk_type"].str.lower().str.contains(rt_norm))
-            ]
-            if not match_s.empty:
-                latest_d = match_s["date"].max() if "date" in match_s.columns else None
-                match_s_latest = match_s[match_s["date"] == latest_d] if latest_d else match_s
-                val_col = "shap_value" if "shap_value" in match_s_latest.columns else "mean_shap_importance"
-                feat_col = "feature" if "feature" in match_s_latest.columns else "feature_name"
-                match_s_latest = match_s_latest.reindex(
-                    match_s_latest[val_col].abs().sort_values(ascending=False).index
-                )
-                for _, r in match_s_latest.iterrows():
-                    shap_breakdown.append(ShapFeature(
-                        feature=str(r[feat_col]),
-                        shap_value=round(float(r[val_col]), 4),
-                    ))
-        elif "target_risk" in df_shap.columns and "feature_name" in df_shap.columns:
-            match_s = df_shap[df_shap["target_risk"].str.lower().str.contains(rt_norm)]
-            if match_s.empty:
-                match_s = df_shap
-            val_col = "mean_shap_importance" if "mean_shap_importance" in match_s.columns else "shap_value"
-            for _, r in match_s.head(5).iterrows():
+    if "entity_id" in df_shap.columns and "risk_type" in df_shap.columns:
+        match_s = df_shap[
+            (df_shap["entity_id"] == entity_id) &
+            (df_shap["risk_type"].str.lower().str.contains(rt_norm))
+        ]
+        if not match_s.empty:
+            latest_d = match_s["date"].max() if "date" in match_s.columns else None
+            match_s_latest = match_s[match_s["date"] == latest_d] if latest_d else match_s
+            val_col = "shap_value" if "shap_value" in match_s_latest.columns else "mean_shap_importance"
+            feat_col = "feature" if "feature" in match_s_latest.columns else "feature_name"
+            match_s_latest = match_s_latest.reindex(
+                match_s_latest[val_col].abs().sort_values(ascending=False).index
+            )
+            for _, r in match_s_latest.iterrows():
                 shap_breakdown.append(ShapFeature(
-                    feature=str(r["feature_name"]),
+                    feature=str(r[feat_col]),
                     shap_value=round(float(r[val_col]), 4),
                 ))
 
-    # Fallback or dynamic reasons from shap_breakdown
+    # If no reasons were matched for this specific query, formulate descriptive reasons from shap_breakdown
     if not top_reasons and shap_breakdown:
         top_reasons = [
             f"Key factor '{item.feature}' contributed {item.shap_value:+.4f} to predicted log-odds"
@@ -258,18 +263,10 @@ def get_reasons(
         ]
 
     if not top_reasons:
-        top_reasons = [
-            f"Elevated historical delivery delays detected for {entity_id}",
-            "Adverse localized news sentiment and disruption flags in vicinity",
-            "Compounding lead time variability over the past 7-day lookback window",
-        ]
-
-    if not shap_breakdown:
-        shap_breakdown = [
-            ShapFeature(feature="delivery_delay_7d_avg", shap_value=0.032),
-            ShapFeature(feature="text_risk_7d", shap_value=0.024),
-            ShapFeature(feature="extreme_weather_flag", shap_value=0.018),
-        ]
+        raise HTTPException(
+            status_code=404,
+            detail=f"No explanation records found for entity '{entity_id}' under risk category '{risk_type}'.",
+        )
 
     return ReasonResponse(
         entity_id=entity_id,
@@ -285,8 +282,8 @@ def get_network_score(date: Optional[str] = Query(None, description="Simulation 
     latest_date = str(date) if date else str(df_pred["date"].max())
     df_latest = df_pred[df_pred["date"] == latest_date]
     if df_latest.empty:
-        df_latest = df_pred[df_pred["date"] == str(df_pred["date"].max())]
         latest_date = str(df_pred["date"].max())
+        df_latest = df_pred[df_pred["date"] == latest_date]
 
     avg_probs = {}
     for rt, comp in [
@@ -302,7 +299,7 @@ def get_network_score(date: Optional[str] = Query(None, description="Simulation 
             avg_probs[comp] = 0.0
 
     news_file = PROC_DIR / "news_scores.parquet"
-    ext_score = 0.0
+    ext_score = None
     if news_file.exists():
         df_news = pd.read_parquet(news_file)
         latest_news = df_news[df_news["date"] == latest_date]
@@ -323,6 +320,8 @@ def get_network_score(date: Optional[str] = Query(None, description="Simulation 
         network_risk_score=round(float(res["network_risk"]), 3),
         level=res["level"].upper(),
         weights_assumption=DEFAULT_WEIGHTS,
+        external_data_status=res.get("external_data_status", "available"),
+        components=res.get("components"),
     )
 
 
@@ -337,9 +336,10 @@ def get_alerts(entity_id: str = Query(..., description="Unique entity ID (e.g. S
         prob = float(latest_row.get("probability", 0.5))
         risk_type = str(latest_row.get("risk_type", "supplier_failure")).lower()
     else:
-        risk_level = "LOW"
-        prob = 0.10
-        risk_type = "supplier_failure"
+        raise HTTPException(
+            status_code=404,
+            detail=f"Entity '{entity_id}' not found in predictions dataset.",
+        )
 
     recs = generate_recommendations(
         risk_type=risk_type,
@@ -387,9 +387,10 @@ def get_metrics():
 def get_forecast():
     f_path = OUT_DIR / "forecast_scores.parquet"
     if not f_path.exists():
-        f_path = PROC_DIR / "forecast_scores_v0_dummy.parquet"
-    if not f_path.exists():
-        return []
+        raise HTTPException(
+            status_code=500,
+            detail="Production forecast artifact (outputs/forecast_scores.parquet) not found. Run Stage 4 forecasting first.",
+        )
     df = pd.read_parquet(f_path)
     records = []
     for _, r in df.iterrows():
@@ -397,8 +398,8 @@ def get_forecast():
             "entity_id": str(r.get("entity_id", "WH001")),
             "date": str(r.get("date"))[:10],
             "forecast_demand": round(float(r.get("forecast_demand", 0)), 1),
-            "chronos_forecast": round(float(r.get("chronos_forecast", 0)), 1),
-            "patchtst_delay_forecast": round(float(r.get("patchtst_delay_forecast", 0)), 2),
+            "chronos_forecast": None if pd.isna(r.get("chronos_forecast")) else round(float(r.get("chronos_forecast", 0)), 1),
+            "patchtst_delay_forecast": None if pd.isna(r.get("patchtst_delay_forecast")) else round(float(r.get("patchtst_delay_forecast", 0)), 2),
             "demand_surge_flag": int(r.get("demand_surge_flag", 0)),
         })
     return records
@@ -408,9 +409,10 @@ def get_forecast():
 def get_anomalies():
     a_path = PROC_DIR / "anomaly_scores.parquet"
     if not a_path.exists():
-        a_path = PROC_DIR / "anomaly_scores_v0_dummy.parquet"
-    if not a_path.exists():
-        return []
+        raise HTTPException(
+            status_code=500,
+            detail="Production anomaly artifact (data/processed/anomaly_scores.parquet) not found. Run Stage 4 anomaly detection first.",
+        )
     df = pd.read_parquet(a_path)
     anom_only = df[df["anomaly_flag"] == 1]
     if anom_only.empty:
@@ -427,6 +429,16 @@ def get_anomalies():
             "anomaly_flag": int(r.get("anomaly_flag", 0)),
         })
     return records
+
+
+@app.get("/api/demos")
+def get_demos():
+    """Dedicated endpoint returning audited demo scenarios, separated from production outputs."""
+    demo_file = DEMOS_DIR / "demo_cases.json"
+    if not demo_file.exists():
+        raise HTTPException(status_code=404, detail="Demo cases file not found.")
+    with open(demo_file, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 if __name__ == "__main__":

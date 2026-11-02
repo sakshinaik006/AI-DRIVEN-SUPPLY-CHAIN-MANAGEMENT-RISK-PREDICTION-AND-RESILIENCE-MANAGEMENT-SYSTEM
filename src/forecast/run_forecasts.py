@@ -1,10 +1,10 @@
 """Execute Demand Forecasting Pipeline.
 
 Audited and corrected for Stage 4:
-1. Replaces simulated Poisson demand with actual historical inventory demand from data/synthetic/daily_inventory.parquet.
-2. Runs HybridDemandForecaster across all warehouses (WH001-WH005) present in the inventory dataset.
-3. Explicitly states implemented models: Exponential Smoothing + CatBoost Residuals.
-4. Leaves incomplete deep models (Chronos-2, PatchTST) disabled or null, rather than fabricating outputs or setting hardcoded zeros.
+1. Operates on real warehouse daily inventory data from data/synthetic/daily_inventory.parquet.
+2. Runs HybridDemandForecaster across all warehouses (WH001-WH005) with clean chronological out-of-sample evaluation.
+3. Evaluates held-out test split performance and saves outputs/forecast_metrics.csv.
+4. Documents unsupported models (Chronos-2, PatchTST) as uncomputed (NaN) rather than fabricating proxy outputs.
 """
 from pathlib import Path
 import pandas as pd
@@ -26,7 +26,7 @@ def generate_forecasts():
     df_inv = pd.read_parquet(inv_path)
     print(f"Loaded {len(df_inv)} daily inventory rows across warehouses: {df_inv['entity_id'].unique().tolist()}")
 
-    # Merge external features (temperature/rain or lag demand if available)
+    # Merge external lag features
     feat_path = PROC / "features_warehouse_v1.parquet"
     if feat_path.exists():
         df_feat = pd.read_parquet(feat_path)
@@ -36,22 +36,33 @@ def generate_forecasts():
         df_merged = df_inv
         feature_cols = None
 
-    print("Running Hybrid Forecaster (Exponential Smoothing + CatBoost residuals)...")
+    print("Running Chronological Hybrid Forecaster (ETS + CatBoost residuals)...")
     forecaster = HybridDemandForecaster(seasonal_periods=7)
-    results = forecaster.fit_predict(df_merged, demand_col="demand_qty", feature_cols=feature_cols)
+    results, metrics_df = forecaster.fit_predict(df_merged, demand_col="demand_qty", feature_cols=feature_cols)
 
     # Format output dates
     results["date"] = pd.to_datetime(results["date"]).dt.strftime("%Y-%m-%d")
 
+    # Required output columns for contract compliance
+    output_cols = [
+        "entity_id", "date", "forecast_demand", "forecast_gap",
+        "demand_surge_flag", "chronos_forecast", "patchtst_delay_forecast"
+    ]
+    df_output = results[output_cols]
+
     # Save to outputs and processed directories
     output_path = OUT / "forecast_scores.parquet"
-    results.to_parquet(output_path, index=False)
-    results.to_parquet(PROC / "forecast_scores.parquet", index=False)
+    df_output.to_parquet(output_path, index=False)
+    df_output.to_parquet(PROC / "forecast_scores.parquet", index=False)
 
-    print(f"Success! Genuine demand forecasts saved to: {output_path} ({len(results)} rows, {results['entity_id'].nunique()} entities)")
-    print(f"Surge flag distribution:\n{results['demand_surge_flag'].value_counts().to_dict()}")
+    metrics_path = OUT / "forecast_metrics.csv"
+    metrics_df.to_csv(metrics_path, index=False)
 
-    return results
+    print(f"Success! Genuine demand forecasts saved to: {output_path} ({len(df_output)} rows, {df_output['entity_id'].nunique()} entities)")
+    print(f"Verified held-out test forecast metrics saved to: {metrics_path}")
+    print(metrics_df.to_string(index=False))
+
+    return df_output, metrics_df
 
 
 if __name__ == "__main__":

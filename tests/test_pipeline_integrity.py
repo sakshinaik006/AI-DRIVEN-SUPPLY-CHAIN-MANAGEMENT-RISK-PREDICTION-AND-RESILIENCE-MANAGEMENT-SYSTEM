@@ -181,3 +181,65 @@ def test_fastapi_full_endpoints():
     assert len(metrics) == 22
     for m in metrics:
         assert "model" in m and "risk_type" in m and "pr_auc" in m
+
+
+def test_shap_and_demo_consistency():
+    """Verify Stage 5: reasons schema, demo case prediction alignment, and SHAP plots."""
+    import json
+
+    reasons_path = OUT_DIR / "reasons.csv"
+    demo_path = OUT_DIR / "demos" / "demo_cases.json"
+    preds_path = OUT_DIR / "predictions.csv"
+
+    assert reasons_path.exists(), "outputs/reasons.csv must exist"
+    assert demo_path.exists(), "outputs/demos/demo_cases.json must exist"
+    assert preds_path.exists(), "outputs/predictions.csv must exist"
+
+    # 1. Verify reasons.csv schema matches generate_shap_plots.py expectations
+    df_reasons = pd.read_csv(reasons_path)
+    expected_cols = [
+        "entity_id", "date", "risk_type", "top3_reasons",
+        "reason_1", "shap_1", "reason_2", "shap_2", "reason_3", "shap_3"
+    ]
+    for c in expected_cols:
+        assert c in df_reasons.columns, f"Missing column {c} in reasons.csv"
+
+    # 2. Verify demo_cases.json matches predictions.csv exactly
+    df_preds = pd.read_csv(preds_path)
+    with open(demo_path, "r", encoding="utf-8") as f:
+        demo_cases = json.load(f)
+
+    for case_name, case_data in demo_cases.items():
+        eid = case_data["entity_id"]
+        dt = case_data["date"]
+        rt = case_data["risk_type"]
+        demo_prob = case_data["probability"]
+        demo_level = case_data["risk_level"].upper()
+
+        sub = df_preds[
+            (df_preds["entity_id"] == eid)
+            & (df_preds["date"] == dt)
+            & (df_preds["risk_type"] == rt)
+        ]
+        assert not sub.empty, f"Demo case {case_name} has no matching row in predictions.csv ({eid}, {dt}, {rt})"
+        actual_prob = round(float(sub.iloc[0]["probability"]), 4)
+        actual_level = str(sub.iloc[0]["level"]).upper()
+
+        assert round(demo_prob, 3) == round(actual_prob, 3), (
+            f"Probability mismatch in {case_name}: demo has {demo_prob}, actual model prediction is {actual_prob}"
+        )
+        assert demo_level == actual_level, (
+            f"Risk level mismatch in {case_name}: demo has {demo_level}, actual is {actual_level}"
+        )
+
+    # 3. Verify SHAP visualization plots exist and are non-empty
+    demo_dir = OUT_DIR / "demos"
+    for plot_name in [
+        "global_shap_importance.png",
+        "shap_high_supplier.png",
+        "shap_stockout.png",
+        "shap_low_risk.png",
+    ]:
+        p = demo_dir / plot_name
+        assert p.exists() and p.stat().st_size > 1000, f"Missing or empty plot: {plot_name}"
+

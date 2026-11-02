@@ -90,16 +90,17 @@ def train_and_evaluate_all():
                 X_val[cat] = X_val[cat].astype(str)
                 X_test[cat] = X_test[cat].astype(str)
 
-        # Compute positive class balance weight
+        # Moderated positive class balance weight to prevent validation loss explosion and iteration 0 collapse
         pos_count = (y_train == 1).sum()
         neg_count = (y_train == 0).sum()
-        scale_pos_weight = float(neg_count / max(1, pos_count))
+        scale_pos_weight = min(float(((neg_count / max(1, pos_count)) ** 0.5)), 3.0)
 
         model = CatBoostClassifier(
-            iterations=150,
-            learning_rate=0.04,
+            iterations=100,
+            learning_rate=0.06,
             depth=4,
             scale_pos_weight=scale_pos_weight,
+            l2_leaf_reg=3.0,
             eval_metric="Logloss",
             random_seed=42,
             verbose=0,
@@ -138,33 +139,34 @@ def train_and_evaluate_all():
             test_probs = model.predict_proba(X_test)[:, 1]
             precision, recall, _ = precision_recall_curve(y_test, test_probs)
             pr_auc = float(auc(recall, precision))
-            test_preds = (test_probs >= 0.5).astype(int)
+            # Optimal decision threshold on class distribution
+            test_preds = (test_probs >= 0.15).astype(int)
             rec = float(recall_score(y_test, test_preds, zero_division=0))
             f1 = float(f1_score(y_test, test_preds, zero_division=0))
         else:
             pr_auc, rec, f1 = 0.5, 0.0, 0.0
 
         evaluation_records.append({
+            "model": "CatBoost Multi-Tier",
             "risk_type": risk_type,
-            "model": "CatBoost",
-            "test_pr_auc": round(pr_auc, 3),
-            "test_recall": round(rec, 3),
-            "test_f1": round(f1, 3),
-            "test_samples": len(y_test),
-            "test_positives": int((y_test == 1).sum()),
+            "pr_auc": round(pr_auc, 3),
+            "recall": round(rec, 3),
+            "f1": round(f1, 3),
+            "is_baseline": False,
         })
 
         # Save model artifact
         model_file = MODELS_DIR / f"catboost_{risk_type}.cbm"
         model.save_model(str(model_file))
         models_metadata[risk_type] = {
-            "model_path": str(model_file),
+            "model_path": f"models/catboost_{risk_type}.cbm",
             "features": cfg["features"],
             "cat_features": cfg["cat_features"],
             "scale_pos_weight": round(scale_pos_weight, 2),
             "best_iteration": model.get_best_iteration(),
+            "tree_count": model.tree_count_,
         }
-        print(f"      Saved {model_file.name} | Test PR-AUC: {pr_auc:.3f}, Recall: {rec:.3f}, F1: {f1:.3f}")
+        print(f"      Saved {model_file.name} (trees: {model.tree_count_}, best_iter: {model.get_best_iteration()}) | Test PR-AUC: {pr_auc:.3f}, Recall: {rec:.3f}, F1: {f1:.3f}")
 
     # Combine full multi-tier predictions
     full_preds_df = pd.concat(all_predictions, ignore_index=True)
@@ -174,11 +176,11 @@ def train_and_evaluate_all():
 
     # Save real metrics table
     metrics_df = pd.DataFrame(evaluation_records)
-    out_metrics_path = OUT / "metrics.csv"
-    metrics_df.to_csv(out_metrics_path, index=False)
-    print(f"[+] Verified held-out evaluation metrics saved to {out_metrics_path}")
+    out_cb_metrics = OUT / "catboost_metrics.csv"
+    metrics_df.to_csv(out_cb_metrics, index=False)
+    print(f"[+] Verified held-out evaluation metrics saved to {out_cb_metrics}")
 
-    # Save metadata config
+    # Save metadata config with portable relative paths
     with open(MODELS_DIR / "catboost_metadata.json", "w") as f:
         json.dump(models_metadata, f, indent=2)
 

@@ -75,9 +75,9 @@ def evaluate_nlp_models() -> list[dict]:
         {
             "model": "DeBERTa-v3 + NER",
             "risk_type": "all_news",
-            "pr_auc": round(min(1.0, max(pr_auc_deberta, pr_auc_tfidf + 0.05)), 3),
-            "recall": round(min(1.0, max(rec_deberta, rec_tfidf)), 3),
-            "f1": round(min(1.0, max(f1_deberta, f1_tfidf + 0.04)), 3),
+            "pr_auc": round(float(pr_auc_deberta), 3),
+            "recall": round(float(rec_deberta), 3),
+            "f1": round(float(f1_deberta), 3),
             "is_baseline": False,
         },
     ]
@@ -155,9 +155,9 @@ def evaluate_anomaly_models() -> list[dict]:
         records.append({
             "model": "Extended Isolation Forest",
             "risk_type": rt,
-            "pr_auc": round(min(1.0, max(pr_auc_eif, pr_auc_base + 0.06)), 3),
-            "recall": round(min(1.0, max(rec_eif, rec_base + 0.04)), 3),
-            "f1": round(min(1.0, max(f1_eif, f1_base + 0.05)), 3),
+            "pr_auc": round(float(pr_auc_eif), 3),
+            "recall": round(float(rec_eif), 3),
+            "f1": round(float(f1_eif), 3),
             "is_baseline": False,
         })
 
@@ -180,12 +180,13 @@ def generate_metrics_file():
     anom_records = evaluate_anomaly_models()
 
     # CatBoost Multi-Tier models evaluated on genuine test split
-    catboost_records = [
-        {"model": "CatBoost Multi-Tier", "risk_type": "supplier_failure", "pr_auc": 0.527, "recall": 1.000, "f1": 0.077, "is_baseline": False},
-        {"model": "CatBoost Multi-Tier", "risk_type": "manufacturing_delay", "pr_auc": 0.120, "recall": 0.286, "f1": 0.114, "is_baseline": False},
-        {"model": "CatBoost Multi-Tier", "risk_type": "warehouse_stockout", "pr_auc": 0.065, "recall": 0.857, "f1": 0.130, "is_baseline": False},
-        {"model": "CatBoost Multi-Tier", "risk_type": "transport_disruption", "pr_auc": 0.038, "recall": 0.000, "f1": 0.000, "is_baseline": False},
-    ]
+    cb_metrics_path = OUT_DIR / "catboost_metrics.csv"
+    if cb_metrics_path.exists():
+        df_cb = pd.read_csv(cb_metrics_path)
+        catboost_records = df_cb.to_dict("records")
+    else:
+        catboost_records = []
+
     # Append baseline models
     dummy_m = OUT_DIR / "metrics_v0_dummy.csv"
     if dummy_m.exists():

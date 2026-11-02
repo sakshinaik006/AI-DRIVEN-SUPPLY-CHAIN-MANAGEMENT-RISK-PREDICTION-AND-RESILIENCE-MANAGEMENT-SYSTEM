@@ -1,11 +1,12 @@
 """Decision Layer: Actionable Resilience Recommendations.
 Owned by Member 1 (Data, Graph, and Dashboard Engineer).
 
-Audited and corrected for Stage 8:
+Audited and rectified for Stage 6:
 - Connects prescriptive decision logic directly to verified network assets and risk categories.
 - Distinguishes model-triggered mitigation recommendations from safe operating notices.
 - Explicitly tags action type ('Prescriptive Mitigation' vs 'Operational Notice').
-- Clears unsupported percentage claims and limits outputs for safe/low-risk entities.
+- Clearly labels buffer increases (+15%, +20%) as heuristic rule-based policy assumptions (not empirically optimized).
+- Limits emergency interventions for safe/low-risk nodes.
 """
 from typing import List, Dict, Any, Optional
 
@@ -39,6 +40,8 @@ def generate_recommendations(
             "priority": "Normal",
             "action_type": "Operational Notice",
             "status": "Nominal",
+            "is_rule_based_assumption": True,
+            "empirical_validation": "Baseline threshold rule",
         }]
 
     if risk_type == "supplier_failure":
@@ -48,12 +51,16 @@ def generate_recommendations(
                 "priority": "Critical",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Action Required",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Operational policy rule (unoptimized)",
             })
             actions.append({
                 "action": f"Review active delivery backlog with {entity_id} and request priority air dispatch.",
                 "priority": "High",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Action Required",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Operational policy rule (unoptimized)",
             })
         elif lvl == "Medium":
             actions.append({
@@ -61,6 +68,8 @@ def generate_recommendations(
                 "priority": "Medium",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Monitoring",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Operational policy rule (unoptimized)",
             })
 
     elif risk_type == "manufacturing_delay":
@@ -70,12 +79,16 @@ def generate_recommendations(
                 "priority": "Critical",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Action Required",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Operational policy rule (unoptimized)",
             })
             actions.append({
                 "action": f"Prepare standby shift operator reallocation to recover output deficit at {entity_id}.",
                 "priority": "High",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Action Required",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Operational policy rule (unoptimized)",
             })
         elif lvl == "Medium":
             actions.append({
@@ -83,28 +96,36 @@ def generate_recommendations(
                 "priority": "Medium",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Monitoring",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Operational policy rule (unoptimized)",
             })
 
     elif risk_type == "warehouse_stockout":
         if lvl == "High":
             actions.append({
-                "action": f"Stockout alert at {entity_id}: raise safety stock buffer threshold by +20% and trigger emergency cross-dock hub transfer.",
+                "action": f"Stockout alert at {entity_id}: raise safety stock buffer threshold by +20% (heuristic assumption) and trigger emergency cross-dock hub transfer.",
                 "priority": "Critical",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Action Required",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Heuristic rule-based assumption (+20% unoptimized)",
             })
             actions.append({
                 "action": f"Prioritize delivery of backlogged customer orders over bulk non-contractual orders at {entity_id}.",
                 "priority": "High",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Action Required",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Operational policy rule (unoptimized)",
             })
         elif lvl == "Medium":
             actions.append({
-                "action": f"Increase safety stock buffer threshold by +15% at {entity_id} to absorb demand variance.",
+                "action": f"Increase safety stock buffer threshold by +15% (heuristic assumption) at {entity_id} to absorb demand variance.",
                 "priority": "Medium",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Monitoring",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Heuristic rule-based assumption (+15% unoptimized)",
             })
 
     elif risk_type == "transport_disruption":
@@ -114,12 +135,16 @@ def generate_recommendations(
                 "priority": "Critical",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Action Required",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Operational policy rule (unoptimized)",
             })
             actions.append({
                 "action": f"Notify downstream receiving hubs of anticipated coastal/port transit dwell on {entity_id}.",
                 "priority": "High",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Action Required",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Operational policy rule (unoptimized)",
             })
         elif lvl == "Medium":
             actions.append({
@@ -127,6 +152,8 @@ def generate_recommendations(
                 "priority": "Medium",
                 "action_type": "Prescriptive Mitigation",
                 "status": "Monitoring",
+                "is_rule_based_assumption": True,
+                "empirical_validation": "Operational policy rule (unoptimized)",
             })
 
     return actions
