@@ -96,8 +96,46 @@ export function ExecutiveOverview({
     };
   }
 
-  // Maximum 3 priority alerts
-  const priorityAlerts = (top_alerts || []).slice(0, 3);
+  // Map of recommendations by entity ID for quick lookup
+  const recMap = React.useMemo(() => {
+    const map = {};
+    (scenarioData?.recommendations || []).forEach((r) => {
+      if (r.entity_id) map[r.entity_id] = r;
+    });
+    return map;
+  }, [scenarioData]);
+
+  // Derived or explicit priority alerts so nodes are always displayed
+  const priorityAlerts = React.useMemo(() => {
+    if (top_alerts && top_alerts.length > 0) {
+      return top_alerts.slice(0, 3);
+    }
+    const entities = scenarioData?.entities || [];
+    if (!entities.length) return [];
+
+    const elevated = entities.filter(
+      (e) => (e.level && e.level.toLowerCase() !== "low") || (e.probability && e.probability >= 0.25)
+    );
+
+    const candidates = elevated.length > 0
+      ? [...elevated].sort((a, b) => (b.probability || 0) - (a.probability || 0))
+      : [...entities].sort((a, b) => (b.probability || 0) - (a.probability || 0));
+
+    return candidates.slice(0, 3).map((e) => {
+      const rec = recMap[e.entity_id];
+      return {
+        entity_id: e.entity_id,
+        name: e.name || e.entity_id,
+        category: e.category || (e.type ? `${e.type.charAt(0).toUpperCase() + e.type.slice(1)} Risk` : "Operational Risk"),
+        level: e.level || (e.probability >= 0.7 ? "High" : e.probability >= 0.3 ? "Medium" : "Low"),
+        probability: e.probability || 0.05,
+        summary: rec?.action || rec?.reason || (e.level === "Low"
+          ? "Nominal status. Operating within standard baseline tolerance limits."
+          : `Elevated disruption probability (${Math.round((e.probability || 0) * 100)}%) detected across operational horizon.`),
+        recommended_action: rec?.action,
+      };
+    });
+  }, [top_alerts, scenarioData, recMap]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -117,9 +155,6 @@ export function ExecutiveOverview({
           <h1 style={{ fontSize: "20px", fontWeight: 600, color: "var(--text-primary)" }}>
             Executive Supply Chain Overview
           </h1>
-          <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "2px" }}>
-            7-day predictive risk horizon across 27 multi-tier nodes (Trained CatBoost & TreeSHAP models)
-          </p>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

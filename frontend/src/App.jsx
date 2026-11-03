@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   LayoutDashboard, 
   BarChart3, 
@@ -37,22 +37,46 @@ export default function App() {
     initData();
   }, []);
 
+  const mainContentRef = useRef(null);
+
+  const scrollToTop = () => {
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+
+  useEffect(() => {
+    scrollToTop();
+    const rafId = requestAnimationFrame(scrollToTop);
+    const timer = setTimeout(scrollToTop, 20);
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timer);
+    };
+  }, [activeTab]);
+
   const scenarioData = dataPayload?.scenario_data?.[selectedDate] || null;
 
   function handleNavigateToRiskAnalysis(categoryKey = null, entityId = null) {
     setActiveTab("analysis");
     if (categoryKey) setSelectedCategory(categoryKey);
     if (entityId) setSelectedEntityId(entityId);
+    scrollToTop();
   }
 
   function handleNavigateToFactors(entityId = null) {
     setActiveTab("factors");
     if (entityId) setSelectedEntityId(entityId);
+    scrollToTop();
   }
 
   function handleNavigateToRecommendations(entityId = null) {
     setActiveTab("recommendations");
     if (entityId) setSelectedEntityId(entityId);
+    scrollToTop();
   }
 
   const navItems = [
@@ -66,7 +90,9 @@ export default function App() {
     <div
       style={{
         display: "flex",
-        minHeight: "100vh",
+        height: "100vh",
+        maxHeight: "100vh",
+        overflow: "hidden",
         backgroundColor: "var(--bg-app)",
         color: "var(--text-primary)",
       }}
@@ -106,7 +132,10 @@ export default function App() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    scrollToTop();
+                  }}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -163,11 +192,13 @@ export default function App() {
 
       {/* MAIN CONTENT AREA */}
       <main
+        ref={mainContentRef}
         style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
           minWidth: 0,
+          height: "100%",
           overflowY: "auto",
         }}
       >
@@ -188,9 +219,6 @@ export default function App() {
             <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>
               {navItems.find((n) => n.id === activeTab)?.label}
             </span>
-          </div>
-          <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-            Benchmark Dataset: <strong style={{ color: "var(--text-secondary)" }}>DataCo + Open-Meteo</strong>
           </div>
         </header>
 

@@ -252,6 +252,18 @@ for dt in scenarios.keys():
         'entities': entities,
         'recommendations': recs,
         'risk_trend': trend,
+        'top_alerts': [
+            {
+                'entity_id': e['entity_id'],
+                'name': e['name'],
+                'category': e['category'],
+                'level': e['level'],
+                'probability': e['probability'],
+                'summary': next((r['action'] for r in recs if r['entity_id'] == e['entity_id']), ('Elevated conditional disruption probability detected' if e['level'] != 'Low' else 'Baseline telemetry nominal.')),
+                'recommended_action': next((r['action'] for r in recs if r['entity_id'] == e['entity_id']), 'Maintain continuous telemetry monitoring.')
+            }
+            for e in (sorted([e for e in entities if e['level'] in ['High', 'Medium']], key=lambda x: x['probability'], reverse=True)[:3] if any(e['level'] in ['High', 'Medium'] for e in entities) else sorted(entities, key=lambda x: x['probability'], reverse=True)[:3])
+        ],
         'alerts': [
             {'id': f"ALT-{e['entity_id']}", 'severity': e['level'], 'message': f"{e['name']} ({e['entity_id']}) breached failure threshold with {int(e['probability']*100)}% probability."}
             for e in entities if e['level'] == 'High'
