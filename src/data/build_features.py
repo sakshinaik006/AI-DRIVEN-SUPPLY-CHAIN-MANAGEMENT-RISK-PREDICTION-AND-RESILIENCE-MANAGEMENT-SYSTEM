@@ -15,9 +15,14 @@ Rules enforced:
    - No post-outcome or target leakage features.
 """
 from pathlib import Path
+from importlib import import_module
 import numpy as np
 import pandas as pd
-from catboost import CatBoostClassifier
+
+try:
+    CatBoostClassifier = import_module("catboost").CatBoostClassifier
+except ImportError:  # pragma: no cover - optional dependency in some environments
+    CatBoostClassifier = None
 
 ROOT = Path(__file__).resolve().parents[2]
 SYN = ROOT / "data" / "synthetic"
