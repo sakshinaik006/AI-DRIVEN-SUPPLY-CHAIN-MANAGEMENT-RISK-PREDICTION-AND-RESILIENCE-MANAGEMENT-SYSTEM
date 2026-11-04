@@ -1,16 +1,23 @@
-# React + Vite
+# Supply Chain Risk & Resilience Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An enterprise executive control tower and predictive analytics frontend built with React 19, Vite, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Executive Overview**: High-level KPI tracking, interactive Network Resilience Score radial gauge, active critical risk alerts, and geospatial network topology.
+- **Multi-Tier Risk Analysis**: Dynamic filtering across all 27 facilities and 4 operational tiers (Suppliers, Plants, Warehouses, Logistics Corridors).
+- **Explainability & Root Causes**: Local TreeSHAP waterfall feature attributions detailing primary operational disruption drivers.
+- **Prescriptive Recommendations**: Rule-based resilience playbooks (supplier diversification, emergency safety stock, multimodal transit rerouting).
 
-## React Compiler
+## Local Development & Build
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+# Install dependencies
+npm install
 
-## Expanding the ESLint configuration
+# Start development server (Port 5173)
+npm run dev
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Compile production bundle (build artifacts saved to dist/)
+npm run build
+```

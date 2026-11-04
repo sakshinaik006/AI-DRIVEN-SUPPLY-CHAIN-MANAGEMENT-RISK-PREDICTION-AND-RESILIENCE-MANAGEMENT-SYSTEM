@@ -1,8 +1,11 @@
-"""Unit and integration tests for Member 1 Day 2 deliverables:
-- features_v1 and features_v2 integrity, columns, no leakage, split mapping
-- graph_scores.parquet schema and coverage
-- data_dictionary.md exists and covers four risks
-- Frontend React build artifacts exist
+"""Feature Engineering, Graph Centrality, and Documentation Test Suite.
+
+Validates:
+- Feature store integrity: version 1 and version 2 parity across all four operational tiers.
+- Temporal leakage prevention: strict 1-day lagged indicators, 7-day lookahead target, and boundary NaN handling.
+- Network graph topology: PageRank, dependency degree, and route importance metrics.
+- Data dictionary documentation completeness.
+- Frontend production bundle build verification.
 """
 from pathlib import Path
 import pandas as pd
@@ -17,7 +20,7 @@ RISK_TABLES = ["supplier", "manufacturing", "warehouse", "transport"]
 
 
 def test_features_v1_and_v2_exist_and_match():
-    """Handover 7 & 10 check: features_v1 and features_v2 exist for all four risks."""
+    """Verify features_v1 and features_v2 exist and match dimensions for all four risks."""
     for risk in RISK_TABLES:
         v1_path = PROC_DIR / f"features_{risk}_v1.parquet"
         v2_path = PROC_DIR / f"features_{risk}_v2.parquet"
@@ -53,8 +56,8 @@ def test_features_leakage_and_splits():
         assert oct_end_rows["label_7d"].isna().all(), f"Lookahead leakage in {risk}: Oct 25-31 must be unlabelled NaN"
 
 
-def test_graph_scores_handover12():
-    """Handover 12 check: graph_scores.parquet with dependency_count and route_importance."""
+def test_graph_scores_schema_and_coverage():
+    """Verify graph_scores.parquet with dependency_count, hgt_score, and route_importance."""
     graph_path = PROC_DIR / "graph_scores.parquet"
     assert graph_path.exists(), "Missing graph_scores.parquet"
     df = pd.read_parquet(graph_path)

@@ -1,7 +1,10 @@
-"""Unit and integration tests for Member 1 Day 3 decision logic & disclosure:
-- network_score.py formula and weights assumption
-- recommendations.py prescriptive resilience logic
-- disclosure.md existence and required sections
+"""Decision Layer and Resilience Management Test Suite.
+
+Validates:
+- Network Resilience Score computation: weighted operational and external components.
+- Fragility thresholding and dynamic status tier classification.
+- Prescriptive resilience mitigation rules and suppression of nominal nodes.
+- Transparent disclosure of real versus synthetic operational datasets.
 """
 from pathlib import Path
 import pytest

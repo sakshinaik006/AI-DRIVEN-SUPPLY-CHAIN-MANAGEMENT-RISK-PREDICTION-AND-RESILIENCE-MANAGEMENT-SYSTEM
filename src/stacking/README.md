@@ -1,26 +1,23 @@
-## Member 3: Forecasting, Stacking, and Explainability
+# Stacking Architecture & TreeSHAP Explainability
 
-This section contains the time-series forecasting, out-of-fold (OOF) cross-validation, and multi-target CatBoost stacking pipelines. 
+This module coordinates multi-tier CatBoost risk modeling, chronological out-of-fold cross-validation, and TreeSHAP root-cause feature attribution.
 
-### Directory Structure
-* `src/forecast/`: Time-series forecasting models (Exponential Smoothing, Chronos-2, PatchTST).
-* `src/stacking/`: Multi-target classification, risk stacking, and validation logic.
-* `src/explain/`: TreeSHAP explainability engine for feature attribution.
-* `outputs/`: Generated predictions and SHAP value files (tracked via Git LFS or excluded if large).
-* `models/`: Saved model binaries (e.g., CatBoost `.cbm` or `.joblib`).
+## Architecture & Modules
 
-### Current Implementations (Day 1)
+- **`train_catboost.py`**: Trains independent CatBoost classifiers across all 4 supply chain operational tiers (Suppliers, Manufacturing, Warehouses, Logistics Corridors). Applies moderated square-root class weighting $\min(\sqrt{N_{neg}/N_{pos}}, 3.0)$ with $L_2$ leaf regularization ($\lambda = 3.0$) to prevent single-tree early-stopping collapse on imbalanced disruption targets.
+- **`explain_model.py`**: Computes exact Shapley feature attributions via `shap.TreeExplainer`, exports `outputs/shap_values.parquet`, and parses top-3 operational disruption drivers into `outputs/reasons.csv`.
+- **`generate_demos.py`**: Dynamically generates verified executive demonstration scenarios (`outputs/demos/demo_cases.json`) and local waterfall visualizations directly from genuine model predictions.
+- **`oof.py`**: Time-ordered expanding-window cross-validation generator enforcing strict 7-day purge gaps between folds.
 
-#### 1. Time-Ordered Out-of-Fold Splitter (`src/stacking/oof.py`)
-Implements an expanding-window cross-validator (`TimeSeriesOOF`) tailored for supply chain metrics. This ensures strict adherence to the project's leakage rules by guaranteeing that base models (forecasts, anomaly scores) never train on future data before generating the probabilities fed into the final CatBoost multi-target model.
+## Running the Pipeline
 
-#### 2. Stacking Scaffold (`src/stacking/stack_scaffold.py`)
-A temporary generator built to fulfill **Handover #6**. It outputs dummy probabilities and risk levels (Low/Medium/High) across the agreed time window (1 April to 31 October 2025) for all four risk types (Supplier, Manufacturing, Warehouse, Transport). 
+```bash
+# Train multi-tier CatBoost models
+python -m src.stacking.train_catboost
 
-### How to Run the Scaffold
-To generate the dummy `predictions.csv` for backend API integration testing:
+# Generate TreeSHAP values and diagnostic root-cause reasons
+python -m src.stacking.explain_model
 
-1. Ensure your virtual environment is active.
-2. Run the generator from the root directory:
-   ```bash
-   python src/stacking/stack_scaffold.py
+# Produce executive demo cases and waterfall charts
+python -m src.stacking.generate_demos
+```

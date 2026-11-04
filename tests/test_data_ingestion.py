@@ -1,6 +1,11 @@
-"""Unit and integration tests for Member 1 deliverables:
-- Day 1: Master tables, coordinates, cities, weather coverage, calibrated positive label rates.
-- DataCo processing: Electronics subset, date shifting into 2025-04-01 to 2025-10-31.
+"""Data Ingestion and Integrity Test Suite.
+
+Validates:
+- Master entity tables: geographic coordinates, cities, and unique entity IDs.
+- Route network topology: valid origins, destinations, coordinates, and transit schedules.
+- Open-Meteo weather coverage: complete daily weather metrics across all 27 facilities.
+- DataCo historical logistics dataset: category filtering and 2025 temporal alignment.
+- Calibrated 7-day-forward positive label rates across all operational risk domains.
 """
 from pathlib import Path
 import pandas as pd
@@ -13,8 +18,8 @@ RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
 
 
-def test_master_tables_handover2_compliance():
-    """Handover 2 check: Country, city, and entity_id are present for every row."""
+def test_master_tables_schema_compliance():
+    """Verify entity master tables contain valid countries, cities, and unique entity IDs."""
     for table_name in ("suppliers", "plants", "warehouses"):
         parquet_path = SYNTHETIC_DIR / f"{table_name}.parquet"
         assert parquet_path.exists(), f"Missing {parquet_path}"
@@ -40,8 +45,8 @@ def test_routes_table_integrity():
     assert df["longitude"].between(-180, 180).all()
 
 
-def test_weather_coverage_handover3():
-    """Handover 3 check: weather covers 1 Apr to 31 Oct 2025 for all entities."""
+def test_weather_coverage_continuity():
+    """Verify Open-Meteo weather coverage covers full date range for all entities."""
     weather_path = RAW_DIR / "weather.parquet"
     assert weather_path.exists(), "Missing weather.parquet"
     df = pd.read_parquet(weather_path)
